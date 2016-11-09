@@ -1,11 +1,20 @@
 package com.mrkid.ecommerce.crawler;
 
+import com.mrkid.ecommerce.crawler.webmagic.ExtrasAwareFileCacheQueueScheduler;
+import com.mrkid.ecommerce.crawler.webmagic.StrictHashSetDuplicateRemover;
+import com.mrkid.ecommerce.crawler.webmagic.RequestHelper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import us.codecraft.webmagic.Spider;
+import us.codecraft.webmagic.pipeline.ConsolePipeline;
+import us.codecraft.webmagic.pipeline.Pipeline;
+import us.codecraft.webmagic.processor.PageProcessor;
+import us.codecraft.webmagic.scheduler.FileCacheQueueScheduler;
 
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 /**
  * User: xudong
@@ -14,25 +23,17 @@ import java.util.concurrent.CompletableFuture;
  */
 @SpringBootApplication
 public class JDCrawlerMain {
-    public static void main(String[] args) {
-        System.setProperty("webdriver.chrome.driver",
-                "/Users/xudong/workspace/github/ecommerce-crawler/chromedriver/mac/chromedriver");
+    public static void main(String[] args) throws ScriptException {
+        final ConfigurableApplicationContext context = SpringApplication.run(JDCrawlerMain.class);
 
+        Spider.create(context.getBean(PageProcessor.class))
+                .scheduler(new ExtrasAwareFileCacheQueueScheduler("./WebMagicFileCacheQueue")
+                        .setDuplicateRemover(new StrictHashSetDuplicateRemover()))
+                .addPipeline(new ConsolePipeline())
+                .addPipeline(context.getBean(Pipeline.class))
+                .addRequest(RequestHelper.topCategoriesRequest()).thread(1).run();
 
-        final ConfigurableApplicationContext run = SpringApplication.run(JDCrawlerMain.class);
-        final JDCrawler jdCrawler = run.getBean(JDCrawler.class);
-//        final List<Category> categories = jdCrawler.getAllCategories().join();
-
-        final Category category = new Category();
-        category.setLevel(3);
-        category.setPath("670_699_700");
-        category.setCid(700);
-
-        category.setName("路由器");
-        final CompletableFuture<List<Sku>> sku = jdCrawler.getSku(category);
-
-        sku.thenAccept(l -> System.out.println(l)).join();
-        run.close();
+        context.close();
 
     }
 }

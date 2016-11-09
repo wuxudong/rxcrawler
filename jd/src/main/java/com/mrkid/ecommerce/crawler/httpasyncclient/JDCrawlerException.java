@@ -1,4 +1,4 @@
-package com.mrkid.ecommerce.crawler;
+package com.mrkid.ecommerce.crawler.httpasyncclient;
 
 /**
  * User: xudong

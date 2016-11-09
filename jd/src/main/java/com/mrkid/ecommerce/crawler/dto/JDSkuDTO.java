@@ -1,4 +1,4 @@
-package com.mrkid.ecommerce.crawler;
+package com.mrkid.ecommerce.crawler.dto;
 
 import lombok.Data;
 
@@ -10,9 +10,11 @@ import java.math.BigDecimal;
  * Time: 7:06 PM
  */
 @Data
-public class Sku {
+public class JDSkuDTO {
 
     private long id;
     private String name;
     private BigDecimal price;
+
+    private long cid;
 }

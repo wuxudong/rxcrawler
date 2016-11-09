@@ -1,4 +1,4 @@
-package com.mrkid.ecommerce.crawler;
+package com.mrkid.ecommerce.crawler.httpasyncclient;
 
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.config.ConnectionConfig;

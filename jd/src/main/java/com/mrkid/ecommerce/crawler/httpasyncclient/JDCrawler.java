@@ -1,17 +1,14 @@
-package com.mrkid.ecommerce.crawler;
+package com.mrkid.ecommerce.crawler.httpasyncclient;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mrkid.ecommerce.crawler.dto.JDCategoryDTO;
+import com.mrkid.ecommerce.crawler.dto.JDSkuDTO;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.jsoup.Jsoup;
@@ -19,17 +16,16 @@ import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.script.ScriptEngine;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,13 +46,13 @@ public class JDCrawler {
     private CloseableHttpAsyncClient httpAsyncClient;
 
     @Autowired
-    private ChromeDriver chromeDriver;
+    private ScriptEngine scriptEngine;
 
-    public CompletableFuture<List<Category>> getAllCategories() {
+    public CompletableFuture<List<JDCategoryDTO>> getAllCategories() {
         return topCategories().thenCompose(topCategories -> {
-                    List<CompletableFuture<Category>> list = new ArrayList<>();
+                    List<CompletableFuture<JDCategoryDTO>> list = new ArrayList<>();
 
-                    for (Category top : topCategories) {
+                    for (JDCategoryDTO top : topCategories) {
                         list.add(completeCategory(top));
                     }
 
@@ -66,15 +62,15 @@ public class JDCrawler {
         );
     }
 
-    public CompletableFuture<List<Sku>> getSku(Category subCategory) {
+    public CompletableFuture<List<JDSkuDTO>> getSku(JDCategoryDTO subCategory) {
         AtomicInteger page = new AtomicInteger(1);
 
-        List<Sku> result = new ArrayList<>();
+        List<JDSkuDTO> result = new ArrayList<>();
 
-        Function<List<Sku>, CompletionStage<List<Sku>>> nextPage = new Function<
-                List<Sku>, CompletionStage<List<Sku>>>() {
+        Function<List<JDSkuDTO>, CompletionStage<List<JDSkuDTO>>> nextPage = new Function<
+                List<JDSkuDTO>, CompletionStage<List<JDSkuDTO>>>() {
             @Override
-            public CompletionStage<List<Sku>> apply(List<Sku> list) {
+            public CompletionStage<List<JDSkuDTO>> apply(List<JDSkuDTO> list) {
                 System.out.println("finish page " + page.get() + " of category " + subCategory.getCid());
                 if (list.isEmpty()) {
                     return CompletableFuture.completedFuture(result);
@@ -91,7 +87,7 @@ public class JDCrawler {
 
     }
 
-    private CompletableFuture<List<Sku>> getSku(Category subCategory, int page) {
+    private CompletableFuture<List<JDSkuDTO>> getSku(JDCategoryDTO subCategory, int page) {
 
         HttpPost post = new HttpPost("http://so.m.jd.com/ware/searchList.action");
         List<NameValuePair> form = new ArrayList<>();
@@ -116,9 +112,9 @@ public class JDCrawler {
             try {
                 final JsonNode value = objectMapper.readTree(objectMapper.readTree(res).get("value").asText());
 
-                List<Sku> result = new ArrayList<>();
+                List<JDSkuDTO> result = new ArrayList<>();
                 for (JsonNode node : value.get("wareList")) {
-                    Sku sku = new Sku();
+                    JDSkuDTO sku = new JDSkuDTO();
                     sku.setId(node.get("wareId").asLong());
                     sku.setName(node.get("wname").asText());
                     sku.setPrice(BigDecimal.valueOf(node.get("jdPrice").asDouble()));
@@ -133,14 +129,14 @@ public class JDCrawler {
                 return result;
             } catch (IOException e) {
                 // TODO
-                return new ArrayList<Sku>();
+                return new ArrayList<JDSkuDTO>();
             }
         });
 
 
     }
 
-    private CompletableFuture<Category> completeCategory(Category top) {
+    private CompletableFuture<JDCategoryDTO> completeCategory(JDCategoryDTO top) {
         return
                 getSubCategories(top.getCid()).thenApply(subCategories -> {
                     top.setCatelogyList(subCategories);
@@ -149,32 +145,31 @@ public class JDCrawler {
 
     }
 
-
-    private CompletableFuture<Category[]> topCategories() {
+    private CompletableFuture<JDCategoryDTO[]> topCategories() {
 
         String url = "http://so.m.jd.com/category/all.html";
         return HttpAsyncClientUtils.execute(httpAsyncClient, new HttpGet(url)).thenApply(content -> extractTopCategories
                 (content));
     }
 
-    private CompletableFuture<Category[]> getSubCategories(int topCid) {
+    private CompletableFuture<JDCategoryDTO[]> getSubCategories(long topCid) {
         String url = "http://so.m.jd.com/category/list.action?_format_=json&catelogyId=" + topCid;
         return HttpAsyncClientUtils.execute(httpAsyncClient, new HttpGet(url)).thenApply(content -> {
             try {
                 final JsonNode jsonNode = objectMapper.readTree(objectMapper.readTree(content).get("catalogBranch")
                         .asText());
-                final Category[] datas = objectMapper.treeToValue
-                        (jsonNode.get("data"), Category[].class);
-                return datas;
+                final JDCategoryDTO[] categories = objectMapper.treeToValue
+                        (jsonNode.get("data"), JDCategoryDTO[].class);
+                return categories;
             } catch (IOException e) {
                 // TODO
-                return new Category[0];
+                return new JDCategoryDTO[0];
             }
         });
 
     }
 
-    private Category[] extractTopCategories(String content) {
+    private JDCategoryDTO[] extractTopCategories(String content) {
         final Document document = Jsoup.parse(content);
         final Elements elements = document.getElementsByTag("script");
 
@@ -190,17 +185,22 @@ public class JDCrawler {
                     if (start >= 0) {
                         int end = wholeData.indexOf(';', start);
 
-                        String categories = wholeData.substring(start, end + 1);
-                        final Object o = chromeDriver.executeScript("var jsArgs = {};" + categories +
-                                "return jsArgs;");
+                        String jsAssignment = wholeData.substring(start, end + 1);
 
                         try {
+                            final Object o = scriptEngine.eval("var jsArgs = {};" + jsAssignment + "jsArgs;");
                             final JsonNode list = objectMapper.readTree(objectMapper.writeValueAsString
                                     (o)).get("category").get("roorList").get
                                     ("catelogyList");
 
-                            return objectMapper.treeToValue(list, Category[].class);
-                        } catch (IOException e) {
+                            final Iterator<JsonNode> iterator = list.elements();
+                            List<JDCategoryDTO> categories = new ArrayList<>();
+                            while (iterator.hasNext()) {
+                                categories.add(objectMapper.treeToValue(iterator.next(), JDCategoryDTO.class));
+                            }
+
+                            return categories.toArray(new JDCategoryDTO[0]);
+                        } catch (Exception e) {
                             // TODO
                         }
                     }
@@ -212,7 +212,7 @@ public class JDCrawler {
         }
 
         // TODO
-        return new Category[0];
+        return new JDCategoryDTO[0];
     }
 
 
