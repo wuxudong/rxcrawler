@@ -160,7 +160,9 @@ public class ExtrasAwareFileCacheQueueScheduler extends DuplicateRemovedSchedule
 
                 urls.add(request);
                 lineReaded++;
-                if (lineReaded > cursor.get()) {
+
+                // maybe url of last cursor is not finished, so use >=, not >
+                if (lineReaded >= cursor.get()) {
                     queue.add(request);
                 }
             }
@@ -206,7 +208,6 @@ public class ExtrasAwareFileCacheQueueScheduler extends DuplicateRemovedSchedule
         queue.add(request);
         try {
             fileUrlWriter.println(objectMapper.writeValueAsString(request));
-            fileCursorWriter.flush();
         } catch (JsonProcessingException e) {
             logger.error("push request error:" + request, e);
         }
@@ -218,8 +219,6 @@ public class ExtrasAwareFileCacheQueueScheduler extends DuplicateRemovedSchedule
             init(task);
         }
         fileCursorWriter.println(cursor.incrementAndGet());
-        fileCursorWriter.flush();
-
         return queue.poll();
     }
 

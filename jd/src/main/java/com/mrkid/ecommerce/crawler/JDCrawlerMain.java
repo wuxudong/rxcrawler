@@ -31,7 +31,7 @@ public class JDCrawlerMain {
                         .setDuplicateRemover(new StrictHashSetDuplicateRemover()))
                 .addPipeline(new ConsolePipeline())
                 .addPipeline(context.getBean(Pipeline.class))
-                .addRequest(RequestHelper.topCategoriesRequest()).thread(1).run();
+                .addRequest(RequestHelper.topCategoriesRequest()).thread(5).run();
 
         context.close();
 
