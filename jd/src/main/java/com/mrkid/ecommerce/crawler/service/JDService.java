@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -71,12 +72,13 @@ public class JDService {
 
         JDSkuPriceHistory skuPriceHistory = skuHistoryRepository.findFirstBySkuIdOrderByLastCheckTimeDesc(skuDTO.getId());
 
-        if (skuPriceHistory != null && skuPriceHistory.getPrice().equals(skuDTO.getPrice())) {
+        BigDecimal price = skuDTO.getPrice().setScale(2);
+        if (skuPriceHistory != null && skuPriceHistory.getPrice().setScale(2).equals(price)) {
             skuPriceHistory.setLastCheckTime(current);
         } else {
             skuPriceHistory = new JDSkuPriceHistory();
             skuPriceHistory.setSkuId(skuDTO.getId());
-            skuPriceHistory.setPrice(skuDTO.getPrice());
+            skuPriceHistory.setPrice(price);
 
             skuPriceHistory.setFirstCheckTime(current);
             skuPriceHistory.setLastCheckTime(current);

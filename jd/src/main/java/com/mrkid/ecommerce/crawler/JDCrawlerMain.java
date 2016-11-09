@@ -1,8 +1,8 @@
 package com.mrkid.ecommerce.crawler;
 
 import com.mrkid.ecommerce.crawler.webmagic.ExtrasAwareFileCacheQueueScheduler;
-import com.mrkid.ecommerce.crawler.webmagic.StrictHashSetDuplicateRemover;
 import com.mrkid.ecommerce.crawler.webmagic.RequestHelper;
+import com.mrkid.ecommerce.crawler.webmagic.StrictHashSetDuplicateRemover;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -10,10 +10,7 @@ import us.codecraft.webmagic.Spider;
 import us.codecraft.webmagic.pipeline.ConsolePipeline;
 import us.codecraft.webmagic.pipeline.Pipeline;
 import us.codecraft.webmagic.processor.PageProcessor;
-import us.codecraft.webmagic.scheduler.FileCacheQueueScheduler;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 /**
