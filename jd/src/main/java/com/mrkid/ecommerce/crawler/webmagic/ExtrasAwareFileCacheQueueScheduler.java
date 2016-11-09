@@ -24,9 +24,9 @@ import java.util.stream.Collectors;
 
 
 /**
- * Store urls and cursor in files so that a Spider can resume the status when shutdown.<br>
+ * Similar to FileCacheQueueScheduler, but change serialize format from url string to json in order to support POST
  *
- * @author code4crafter@gmail.com <br>
+ * @author xudong82113@gmail.com <br>
  * @since 0.2.0
  */
 public class ExtrasAwareFileCacheQueueScheduler extends DuplicateRemovedScheduler implements MonitorableScheduler,
@@ -161,8 +161,7 @@ public class ExtrasAwareFileCacheQueueScheduler extends DuplicateRemovedSchedule
                 urls.add(request);
                 lineReaded++;
 
-                // maybe url of last cursor is not finished, so use >=, not >
-                if (lineReaded >= cursor.get()) {
+                if (lineReaded > cursor.get()) {
                     queue.add(request);
                 }
             }
