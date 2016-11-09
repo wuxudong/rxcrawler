@@ -10,6 +10,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * Time: 11:43 AM
  */
 public interface JDSkuHistoryRepository extends JpaRepository<JDSkuPriceHistory, Long> {
-    JDSkuPriceHistory findOneBySkuIdOrderByLastCheckTimeDesc(long skuId);
+    JDSkuPriceHistory findFirstBySkuIdOrderByLastCheckTimeDesc(long skuId);
 
 }

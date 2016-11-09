@@ -69,7 +69,7 @@ public class JDService {
 
         final Date current = new Date();
 
-        JDSkuPriceHistory skuPriceHistory = skuHistoryRepository.findOneBySkuIdOrderByLastCheckTimeDesc(skuDTO.getId());
+        JDSkuPriceHistory skuPriceHistory = skuHistoryRepository.findFirstBySkuIdOrderByLastCheckTimeDesc(skuDTO.getId());
 
         if (skuPriceHistory != null && skuPriceHistory.getPrice().equals(skuDTO.getPrice())) {
             skuPriceHistory.setLastCheckTime(current);
