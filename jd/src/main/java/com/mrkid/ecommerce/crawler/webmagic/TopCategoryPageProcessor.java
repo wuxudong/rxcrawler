@@ -3,7 +3,6 @@ package com.mrkid.ecommerce.crawler.webmagic;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mrkid.ecommerce.crawler.dto.JDCategoryDTO;
-import com.mrkid.ecommerce.crawler.model.Category_;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +13,6 @@ import us.codecraft.webmagic.handler.SubPageProcessor;
 
 import javax.script.ScriptEngine;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -58,7 +56,6 @@ public class TopCategoryPageProcessor implements SubPageProcessor {
                         categories.add(objectMapper.treeToValue(iterator.next(), JDCategoryDTO.class));
                     }
                     page.putField("categories", categories);
-
 
                     for (JDCategoryDTO category : categories) {
                         page.addTargetRequest(RequestHelper.subCategoriesRequest(category.getCid()));
