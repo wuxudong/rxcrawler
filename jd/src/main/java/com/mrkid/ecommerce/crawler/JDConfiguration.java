@@ -35,6 +35,7 @@ public class JDConfiguration {
                 "10_12_1)" +
                 " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36");
 
+        site.setTimeOut(30000);
         site.setHttpProxy(new HttpHost("127.0.0.1", 3128));
 
         CompositePageProcessor pageProcessor = new CompositePageProcessor(site);

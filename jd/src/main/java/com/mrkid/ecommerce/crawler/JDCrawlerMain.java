@@ -22,11 +22,12 @@ import java.util.Arrays;
 @SpringBootApplication
 public class JDCrawlerMain {
     public static void main(String[] args) throws ScriptException {
-        final ConfigurableApplicationContext context = SpringApplication.run(JDCrawlerMain.class);
-
         if (args.length != 1) {
             System.out.println("usage : java -jar jd.jar restart/resume");
+            return;
         }
+
+        final ConfigurableApplicationContext context = SpringApplication.run(JDCrawlerMain.class);
 
         final DummyRedisScheduler scheduler = new DummyRedisScheduler(context.getBean(StringRedisTemplate.class));
 
