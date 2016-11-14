@@ -62,6 +62,8 @@ public class JDService {
         JDSku sku = new JDSku();
         sku.setId(skuDTO.getId());
         sku.setName(skuDTO.getName());
+        sku.setRawListContent(skuDTO.getRawListContent());
+        sku.setRawItemContent(skuDTO.getRawItemContent());
 
         sku.setCid(skuDTO.getCid());
 

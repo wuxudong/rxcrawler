@@ -2,9 +2,7 @@ package com.mrkid.ecommerce.crawler.model;
 
 import lombok.Data;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -15,7 +13,7 @@ import java.util.Date;
  */
 @Data
 @Entity
-
+@Table(indexes = {@Index(name = "sku_id_last_check_time_index", columnList = "skuId,lastCheckTime")})
 public class JDSkuPriceHistory {
     @Id
     @GeneratedValue

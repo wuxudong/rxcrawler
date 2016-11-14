@@ -45,6 +45,8 @@ public class ListPageProcessor implements SubPageProcessor {
                 sku.setPrice(BigDecimal.valueOf(node.get("jdPrice").asDouble()));
                 sku.setCid(node.get("catid").asLong());
 
+                sku.setRawListContent(node.toString());
+
                 if (sku.getId() != 0) {
                     result.add(sku);
                 } else {

@@ -2,11 +2,7 @@ package com.mrkid.ecommerce.crawler.model;
 
 import lombok.Data;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import java.math.BigDecimal;
+import javax.persistence.*;
 
 /**
  * User: xudong
@@ -15,6 +11,7 @@ import java.math.BigDecimal;
  */
 @Data
 @Entity
+@Table(indexes = @Index(name = "cid_index", columnList = "cid"))
 public class JDSku {
     @Id
     private long id;
@@ -23,4 +20,11 @@ public class JDSku {
     private String name;
 
     private long cid;
+
+    @Column(columnDefinition = "TEXT")
+    private String rawListContent;
+
+    @Column(columnDefinition = "TEXT")
+    private String rawItemContent;
+
 }

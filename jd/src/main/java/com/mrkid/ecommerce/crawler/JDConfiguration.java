@@ -1,9 +1,8 @@
-package com.mrkid.ecommerce.crawler.webmagic;
+package com.mrkid.ecommerce.crawler;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.handler.CompositePageProcessor;
 import us.codecraft.webmagic.handler.CompositePipeline;
@@ -49,7 +48,4 @@ public class JDConfiguration {
 
         return pipeline;
     }
-
-
-
 }
