@@ -98,9 +98,9 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
                 return null;
             }
 
-            Request request = objectMapper.readValue(line.trim(), Request.class);
+            Request request = objectMapper.readValue(line, Request.class);
             redisTemplate.boundHashOps(getProcessingQueueKey())
-                    .put(getProcessingQueueKey(), request.getExtra(REQUEST_UUID));
+                    .put(request.getExtra(REQUEST_UUID), line);
 
 
             // HttpDownloader require nameValuePair as NameValuePair[],
