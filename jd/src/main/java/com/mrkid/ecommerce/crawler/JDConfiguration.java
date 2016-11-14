@@ -1,5 +1,6 @@
 package com.mrkid.ecommerce.crawler;
 
+import org.apache.http.HttpHost;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +34,8 @@ public class JDConfiguration {
         Site site = Site.me().setSleepTime(0).setRetryTimes(3).setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X " +
                 "10_12_1)" +
                 " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36");
+
+        site.setHttpProxy(new HttpHost("127.0.0.1", 3128));
 
         CompositePageProcessor pageProcessor = new CompositePageProcessor(site);
         pageProcessor.setSubPageProcessors(subPageProcessors.toArray(new SubPageProcessor[subPageProcessors.size()]));
