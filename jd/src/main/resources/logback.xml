@@ -22,6 +22,7 @@
         <append>true</append>
         <encoder>
             <pattern>%d{HH:mm:ss} [%thread] %-5level %logger{35} - %msg%n
+            </pattern>
         </encoder>
     </appender>
 
