@@ -47,7 +47,7 @@ public class JDCrawlerMain {
         }
 
 
-        spider.thread(100).run();
+        spider.thread(15).run();
 
         context.close();
 
