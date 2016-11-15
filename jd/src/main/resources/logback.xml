@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="rollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <file>app.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>app.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>%d{HH:mm:ss} [%thread] %-5level %logger{35} - %msg%n
+            </pattern>
+        </encoder>
+
+    </appender>
+
+    <appender name="errorLog" class="ch.qos.logback.core.FileAppender">
+        <file>error.log</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%d{HH:mm:ss} [%thread] %-5level %logger{35} - %msg%n
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="rollingFile" />
+    </root>
+
+    <logger name="error" level="ERROR">
+        <appender-ref ref="errorLog"/>
+    </logger>
+</configuration>

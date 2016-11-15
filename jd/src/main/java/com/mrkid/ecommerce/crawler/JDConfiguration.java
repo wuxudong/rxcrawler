@@ -30,14 +30,16 @@ public class JDConfiguration {
     private List<SubPipeline> subPipelines;
 
     @Bean
-    public PageProcessor initJDPageProcessor() {
-        Site site = Site.me().setSleepTime(0).setRetryTimes(3).setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X " +
+    public PageProcessor jdPageProcessor() {
+        Site site = Site.me().setSleepTime(0).setRetryTimes(1).setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X " +
                 "10_12_1)" +
                 " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36");
 
         site.setTimeOut(30000);
+
+        // use squid as proxy, you may add parent of proxies in squid
         site.setHttpProxy(new HttpHost("127.0.0.1", 3128));
-        site.setCycleRetryTimes(3);
+        site.setCycleRetryTimes(5);
 
         CompositePageProcessor pageProcessor = new CompositePageProcessor(site);
         pageProcessor.setSubPageProcessors(subPageProcessors.toArray(new SubPageProcessor[subPageProcessors.size()]));
@@ -46,7 +48,7 @@ public class JDConfiguration {
     }
 
     @Bean
-    public Pipeline initJDPipeline() {
+    public Pipeline jdPipeline() {
 
         CompositePipeline pipeline = new CompositePipeline();
         pipeline.setSubPipeline(subPipelines.toArray(new SubPipeline[subPipelines.size()]));

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import us.codecraft.webmagic.Request;
@@ -36,6 +38,7 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
 
     private static final String PROCESSING_QUEUE_KEY = "crawler_processing_queue";
 
+
     private ObjectMapper objectMapper = new ObjectMapper();
 
     // a field in request extras, the unique id of request
@@ -47,6 +50,8 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
     private AtomicBoolean inited = new AtomicBoolean(false);
 
     private final StringRedisTemplate redisTemplate;
+
+    private final Logger errorLogger = LoggerFactory.getLogger("error");
 
     public DummyRedisScheduler(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
@@ -66,7 +71,7 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
         }
 
         inited.set(true);
-        logger.info("init cache scheduler success");
+        errorLogger.info("init cache scheduler success");
     }
 
 
@@ -129,7 +134,6 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
     }
 
 
-
     @Override
     public int getLeftRequestsCount(Task task) {
         Long size = redisTemplate.boundHashOps(getPendingQueueKey()).size();
@@ -164,13 +168,17 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
     @Override
     public void onError(Request request) {
         finishProcessing(request);
+
+        try {
+            errorLogger.error(objectMapper.writeValueAsString(request));
+        } catch (JsonProcessingException e) {
+
+        }
+
     }
 
     private void finishProcessing(Request request) {
-        final String taskUUID = (String) request.getExtra(TASK_UUID);
-        if (taskUUID != null) {
-            redisTemplate.boundHashOps(getProcessingQueueKey()).delete(request.getExtra(REQUEST_UUID));
-        }
+        redisTemplate.boundHashOps(getProcessingQueueKey()).delete(request.getExtra(REQUEST_UUID));
     }
 
     public void clearAll() {
@@ -178,7 +186,6 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
         redisTemplate.delete(getPendingQueueKey());
 
     }
-
 
 
 }
