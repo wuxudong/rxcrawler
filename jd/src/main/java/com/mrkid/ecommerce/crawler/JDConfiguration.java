@@ -37,6 +37,7 @@ public class JDConfiguration {
 
         site.setTimeOut(30000);
         site.setHttpProxy(new HttpHost("127.0.0.1", 3128));
+        site.setCycleRetryTimes(3);
 
         CompositePageProcessor pageProcessor = new CompositePageProcessor(site);
         pageProcessor.setSubPageProcessors(subPageProcessors.toArray(new SubPageProcessor[subPageProcessors.size()]));
