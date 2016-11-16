@@ -14,6 +14,9 @@
     <groupId>com.mrkid.ecommerce</groupId>
     <artifactId>jd</artifactId>
 
+    <properties>
+    </properties>
+
 
     <dependencies>
         <dependency>
