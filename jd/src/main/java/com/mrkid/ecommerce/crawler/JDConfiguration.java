@@ -31,7 +31,7 @@ public class JDConfiguration {
 
     @Bean
     public PageProcessor jdPageProcessor() {
-        Site site = Site.me().setSleepTime(0).setRetryTimes(1).setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X " +
+        Site site = Site.me().setSleepTime(0).setRetryTimes(0).setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X " +
                 "10_12_1)" +
                 " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36");
 
@@ -39,7 +39,6 @@ public class JDConfiguration {
 
         // use squid as proxy, you may add parent of proxies in squid
         site.setHttpProxy(new HttpHost("127.0.0.1", 3128));
-        site.setCycleRetryTimes(5);
 
         CompositePageProcessor pageProcessor = new CompositePageProcessor(site);
         pageProcessor.setSubPageProcessors(subPageProcessors.toArray(new SubPageProcessor[subPageProcessors.size()]));

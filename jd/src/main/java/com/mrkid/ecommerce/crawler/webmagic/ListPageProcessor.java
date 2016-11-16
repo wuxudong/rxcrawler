@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mrkid.ecommerce.crawler.dto.JDCategoryDTO;
 import com.mrkid.ecommerce.crawler.dto.JDSkuDTO;
+import com.mrkid.ecommerce.crawler.httpasyncclient.JDCrawlerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -71,8 +72,7 @@ public class ListPageProcessor implements SubPageProcessor {
 
             page.putField("skus", result);
         } catch (IOException e) {
-            logger.error("fail to extract skus", e);
-            page.putField("skus", new ArrayList<>());
+            throw new JDCrawlerException(e);
         }
 
 

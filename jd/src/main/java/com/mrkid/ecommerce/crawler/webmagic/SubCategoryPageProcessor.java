@@ -3,6 +3,7 @@ package com.mrkid.ecommerce.crawler.webmagic;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mrkid.ecommerce.crawler.dto.JDCategoryDTO;
+import com.mrkid.ecommerce.crawler.httpasyncclient.JDCrawlerException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,8 +64,8 @@ public class SubCategoryPageProcessor implements SubPageProcessor {
 
 
         } catch (IOException e) {
-            logger.error("fail to extract categories, " + page.getRawText(), e);
-            page.putField("categories", new ArrayList<>());
+            throw new JDCrawlerException(e);
+
         }
         return MatchOther.NO;
     }

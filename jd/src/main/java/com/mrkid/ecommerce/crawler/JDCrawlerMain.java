@@ -34,7 +34,6 @@ public class JDCrawlerMain {
         final Spider spider = Spider.create(context.getBean(PageProcessor.class))
                 .scheduler(scheduler)
                 .setSpiderListeners(Arrays.asList(scheduler))
-                .addPipeline(new ConsolePipeline())
                 .addPipeline(context.getBean(Pipeline.class));
 
 

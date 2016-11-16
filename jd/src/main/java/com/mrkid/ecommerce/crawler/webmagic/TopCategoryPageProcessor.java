@@ -3,6 +3,7 @@ package com.mrkid.ecommerce.crawler.webmagic;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mrkid.ecommerce.crawler.dto.JDCategoryDTO;
+import com.mrkid.ecommerce.crawler.httpasyncclient.JDCrawlerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,8 +65,9 @@ public class TopCategoryPageProcessor implements SubPageProcessor {
                     break;
 
                 } catch (Exception e) {
-                    logger.error("fail to extract categories, " + page.getRawText(), e);
-                    page.putField("categories", new ArrayList<>());
+                    logger.error("request " + page.getRequest() + " fail to extract categories, " + page.getRawText()
+                            , e);
+                    throw new JDCrawlerException(e);
                 }
             }
         }

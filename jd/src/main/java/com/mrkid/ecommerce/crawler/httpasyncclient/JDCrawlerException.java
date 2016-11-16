@@ -5,7 +5,7 @@ package com.mrkid.ecommerce.crawler.httpasyncclient;
  * Date: 07/11/2016
  * Time: 2:43 PM
  */
-public class JDCrawlerException extends Exception {
+public class JDCrawlerException extends RuntimeException {
     public JDCrawlerException(String message) {
         super(message);
     }

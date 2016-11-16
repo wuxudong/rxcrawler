@@ -167,9 +167,8 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
 
     @Override
     public void onError(Request request) {
-        finishProcessing(request);
-
         try {
+
             errorLogger.error(objectMapper.writeValueAsString(request));
         } catch (JsonProcessingException e) {
 
@@ -184,8 +183,6 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
     public void clearAll() {
         redisTemplate.delete(getProcessingQueueKey());
         redisTemplate.delete(getPendingQueueKey());
-
     }
-
 
 }
