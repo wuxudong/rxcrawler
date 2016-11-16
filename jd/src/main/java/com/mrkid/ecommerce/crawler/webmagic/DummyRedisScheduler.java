@@ -168,7 +168,6 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
     @Override
     public void onError(Request request) {
         try {
-
             errorLogger.error(objectMapper.writeValueAsString(request));
         } catch (JsonProcessingException e) {
 

@@ -36,10 +36,11 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- there is some bug in 0.5.3-->
             <dependency>
                 <groupId>us.codecraft</groupId>
                 <artifactId>webmagic-core</artifactId>
-                <version>0.5.3</version>
+                <version>0.5.4-SNAPSHOT</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.slf4j</groupId>
@@ -51,7 +52,7 @@
             <dependency>
                 <groupId>us.codecraft</groupId>
                 <artifactId>webmagic-extension</artifactId>
-                <version>0.5.3</version>
+                <version>0.5.4-SNAPSHOT</version>
             </dependency>
 
             <dependency>

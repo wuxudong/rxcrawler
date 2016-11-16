@@ -65,8 +65,6 @@ public class TopCategoryPageProcessor implements SubPageProcessor {
                     break;
 
                 } catch (Exception e) {
-                    logger.error("request " + page.getRequest() + " fail to extract categories, " + page.getRawText()
-                            , e);
                     throw new JDCrawlerException(e);
                 }
             }
