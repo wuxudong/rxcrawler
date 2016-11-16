@@ -55,22 +55,27 @@ public class ListPageProcessor implements SubPageProcessor {
                 }
             }
 
+            final Object obj = page.getRequest().getExtra("category");
+
+
+            JDCategoryDTO category = null;
+            if (obj instanceof JDCategoryDTO) {
+                category = (JDCategoryDTO) obj;
+            } else {
+                category = objectMapper.readValue(objectMapper.writeValueAsString(obj),
+                        JDCategoryDTO.class);
+            }
+
+            int pageNum = (Integer) page.getRequest().getExtra("page");
+
             if (!result.isEmpty()) {
-                final Object obj = page.getRequest().getExtra("category");
-
-
-                JDCategoryDTO category = null;
-                if (obj instanceof JDCategoryDTO) {
-                    category = (JDCategoryDTO) obj;
-                } else {
-                    category = objectMapper.readValue(objectMapper.writeValueAsString(obj),
-                            JDCategoryDTO.class);
-                }
-                int p = (Integer) page.getRequest().getExtra("page");
-                page.addTargetRequest(RequestHelper.listRequest(category, p + 1));
+                page.addTargetRequest(RequestHelper.listRequest(category, pageNum + 1));
             }
 
             page.putField("skus", result);
+
+            logger.info("category:{} page:{} get {} skus", category.getPath(), pageNum, result.size());
+
         } catch (IOException e) {
             throw new JDCrawlerException(e);
         }
