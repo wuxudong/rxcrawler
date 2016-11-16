@@ -47,8 +47,6 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
     // a field in request extras, the unique id of request's owner task
     private static String TASK_UUID = "TASK_UUID";
 
-    private AtomicBoolean inited = new AtomicBoolean(false);
-
     private final StringRedisTemplate redisTemplate;
 
     private final Logger errorLogger = LoggerFactory.getLogger("error");
@@ -58,7 +56,7 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
         setDuplicateRemover(this);
     }
 
-    private void init(Task task) {
+    public void recycleFailedRequest() {
         final BoundHashOperations<String, String, String> operations = redisTemplate
                 .boundHashOps(getProcessingQueueKey());
 
@@ -70,16 +68,11 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
             redisTemplate.boundListOps(getPendingQueueKey()).rightPush(line);
         }
 
-        inited.set(true);
-        errorLogger.info("init cache scheduler success");
     }
 
 
     @Override
     protected void pushWhenNoDuplicate(Request request, Task task) {
-        if (!inited.get()) {
-            init(task);
-        }
 
         request.putExtra(REQUEST_UUID, UUID.randomUUID().toString());
         request.putExtra(TASK_UUID, task.getUUID());
@@ -92,9 +85,6 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
 
     @Override
     public synchronized Request poll(Task task) {
-        if (!inited.get()) {
-            init(task);
-        }
 
         try {
 
@@ -146,9 +136,6 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
 
     @Override
     public boolean isDuplicate(Request request, Task task) {
-        if (!inited.get()) {
-            init(task);
-        }
 
         return false;
     }
@@ -172,11 +159,15 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
         } catch (JsonProcessingException e) {
 
         }
-
     }
 
     private void finishProcessing(Request request) {
         redisTemplate.boundHashOps(getProcessingQueueKey()).delete(request.getExtra(REQUEST_UUID));
+    }
+
+
+    public boolean isFinished() {
+        return redisTemplate.boundHashOps(getProcessingQueueKey()).size() == 0l;
     }
 
     public void clearAll() {

@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import us.codecraft.webmagic.Spider;
-import us.codecraft.webmagic.pipeline.ConsolePipeline;
 import us.codecraft.webmagic.pipeline.Pipeline;
 import us.codecraft.webmagic.processor.PageProcessor;
 
@@ -31,23 +30,27 @@ public class JDCrawlerMain {
 
         final DummyRedisScheduler scheduler = new DummyRedisScheduler(context.getBean(StringRedisTemplate.class));
 
-        final Spider spider = Spider.create(context.getBean(PageProcessor.class))
-                .scheduler(scheduler)
-                .setSpiderListeners(Arrays.asList(scheduler))
-                .addPipeline(context.getBean(Pipeline.class));
+        boolean firstEnter = true;
 
+        while (firstEnter || !scheduler.isFinished()) {
 
-        switch (args[0]) {
-            case "restart":
+            scheduler.recycleFailedRequest();
+
+            Spider spider = Spider.create(context.getBean(PageProcessor.class))
+                    .scheduler(scheduler)
+                    .setSpiderListeners(Arrays.asList(scheduler))
+                    .addPipeline(context.getBean(Pipeline.class));
+
+            if (firstEnter && "restart".equals(args[0])) {
                 scheduler.clearAll();
                 spider.addRequest(RequestHelper.topCategoriesRequest());
-                break;
-            case "resume":
-                break;
+            }
+
+            spider.thread(15).run();
+
+            firstEnter = false;
+
         }
-
-
-        spider.thread(1).run();
 
         context.close();
 
