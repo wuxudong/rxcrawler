@@ -15,6 +15,7 @@
     <artifactId>jd</artifactId>
 
     <properties>
+        <start-class>com.mrkid.ecommerce.crawler.JDCrawlerMain</start-class>
     </properties>
 
 
