@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mrkid.ecommerce.crawler.dto.JDCategoryDTO;
 import com.mrkid.ecommerce.crawler.dto.JDSkuDTO;
-import com.mrkid.ecommerce.crawler.httpasyncclient.JDCrawlerException;
+import com.mrkid.ecommerce.crawler.JDCrawlerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

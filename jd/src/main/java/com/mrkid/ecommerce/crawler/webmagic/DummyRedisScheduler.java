@@ -7,7 +7,6 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import us.codecraft.webmagic.Request;
 import us.codecraft.webmagic.SpiderListener;
@@ -28,6 +27,7 @@ import java.util.stream.Collectors;
  * Support POST.
  * It is lack of DuplicateRemover function to save memory. (It is common to crawl api).
  * It store processing request to redis, and remove it when the request is finished, so we won't lose any requests.
+ * and it lose ability of scaling to multiple machines
  *
  * @author xudong82113@gmail.com <br>
  * @since 0.2.0
@@ -58,9 +58,9 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
 
     /**
      * It should only be called at beginning, not thread safe
+     * restore crawling request killed in the last run
      */
     public void mergeProcessingToPending() {
-
         // TODO make operation atomic
         final Map<String, String> processing = redisTemplate
                 .<String, String>boundHashOps(getProcessingQueueKey()).entries();
@@ -69,7 +69,7 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
 
         clearAll();
 
-        // distinct use uuid
+        // use uuid for unique
         final Map<String, String> map = new LinkedHashMap<>();
 
         for (String s : pending) {

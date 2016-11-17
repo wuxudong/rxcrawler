@@ -1,8 +1,6 @@
 package com.mrkid.ecommerce.crawler.utils;
 
 import com.google.common.collect.ImmutableMap;
-import com.mrkid.ecommerce.crawler.dto.JDCategoryDTO;
-import org.apache.http.message.BasicNameValuePair;
 
 import java.util.Map;
 

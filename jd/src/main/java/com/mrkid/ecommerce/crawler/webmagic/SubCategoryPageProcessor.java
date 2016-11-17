@@ -3,7 +3,7 @@ package com.mrkid.ecommerce.crawler.webmagic;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mrkid.ecommerce.crawler.dto.JDCategoryDTO;
-import com.mrkid.ecommerce.crawler.httpasyncclient.JDCrawlerException;
+import com.mrkid.ecommerce.crawler.JDCrawlerException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

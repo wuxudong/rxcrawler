@@ -14,7 +14,7 @@ import javax.script.ScriptEngineManager;
 @Configuration
 public class ScriptEngineConfiguration {
     @Bean
-    public ScriptEngine initScriptEngine() {
+    public ScriptEngine scriptEngine() {
         ScriptEngineManager factory = new ScriptEngineManager();
         return factory.getEngineByName("JavaScript");
     }
