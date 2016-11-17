@@ -7,14 +7,18 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Component;
 import us.codecraft.webmagic.Request;
+import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.SpiderListener;
 import us.codecraft.webmagic.Task;
 import us.codecraft.webmagic.scheduler.DuplicateRemovedScheduler;
 import us.codecraft.webmagic.scheduler.MonitorableScheduler;
 import us.codecraft.webmagic.scheduler.component.DuplicateRemover;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,6 +36,7 @@ import java.util.stream.Collectors;
  * @author xudong82113@gmail.com <br>
  * @since 0.2.0
  */
+@Component
 public class DummyRedisScheduler extends DuplicateRemovedScheduler implements MonitorableScheduler, DuplicateRemover,
         SpiderListener {
 
@@ -47,12 +52,16 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
     // a field in request extras, the unique id of request's owner task
     private static String TASK_UUID = "TASK_UUID";
 
-    private final StringRedisTemplate redisTemplate;
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private Site site;
 
     private final Logger errorLogger = LoggerFactory.getLogger("error");
 
-    public DummyRedisScheduler(StringRedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    @PostConstruct
+    public void init() {
         setDuplicateRemover(this);
     }
 
@@ -94,12 +103,19 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
     protected void pushWhenNoDuplicate(Request request, Task task) {
 
         assignRequestUUID(request);
-        request.putExtra(TASK_UUID, task.getUUID());
+        assignTaskUUID(request, task);
 
         try {
             redisTemplate.boundListOps(getPendingQueueKey()).rightPush(objectMapper.writeValueAsString(request));
         } catch (JsonProcessingException e) {
         }
+    }
+
+    private void assignTaskUUID(Request request, Task task) {
+        if (StringUtils.isBlank(getTaskUUID(request))) {
+            request.putExtra(TASK_UUID, task.getUUID());
+        }
+
     }
 
     private void assignRequestUUID(Request request) {
@@ -145,6 +161,10 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
         return (String) request.getExtra(REQUEST_UUID);
     }
 
+    private String getTaskUUID(Request request) {
+        return (String) request.getExtra(TASK_UUID);
+    }
+
 
     protected String getPendingQueueKey() {
         return PENDING_QUEUE_KEY;
@@ -183,14 +203,33 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
         finishProcessing(request);
     }
 
+
+    /**
+     * In webmagic, if your request get some unexpected exception,
+     * it will try several times until reach site.cycleTriedTimes, then finally onError is called.
+     * <p>
+     * But when using proxy, some proxies will reject your request by return 502/504/others, and webmagic will
+     * directly call onError without any retry. In this case, we add back this request. and increment  cycleTriedTimes.
+     *
+     * @param request
+     */
     @Override
     public void onError(Request request) {
         try {
-            errorLogger.error(objectMapper.writeValueAsString(request));
+            int cycleTriedTimes = request.getExtra(Request.CYCLE_TRIED_TIMES) == null ? 0 : (Integer) request
+                    .getExtra(Request.CYCLE_TRIED_TIMES);
+
+            cycleTriedTimes++;
+            request.putExtra(Request.CYCLE_TRIED_TIMES, cycleTriedTimes);
+            if (cycleTriedTimes >= site.getCycleRetryTimes()) {
+                errorLogger.error("request failed:" + objectMapper.writeValueAsString(request));
+                return;
+            }
+            pushWhenNoDuplicate(request, null);
             finishProcessing(request);
         } catch (JsonProcessingException e) {
-
         }
+
     }
 
     private void finishProcessing(Request request) {

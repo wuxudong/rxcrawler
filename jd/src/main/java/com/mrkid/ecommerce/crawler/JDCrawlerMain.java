@@ -28,7 +28,7 @@ public class JDCrawlerMain {
 
         final ConfigurableApplicationContext context = SpringApplication.run(JDCrawlerMain.class);
 
-        final DummyRedisScheduler scheduler = new DummyRedisScheduler(context.getBean(StringRedisTemplate.class));
+        final DummyRedisScheduler scheduler = context.getBean(DummyRedisScheduler.class);
 
         Spider spider = Spider.create(context.getBean(PageProcessor.class))
                 .scheduler(scheduler)
@@ -42,8 +42,7 @@ public class JDCrawlerMain {
             scheduler.mergeProcessingToPending();
         }
 
-        spider.thread(50).run();
-
+        spider.thread(100).run();
 
         context.close();
 
