@@ -21,9 +21,11 @@ public class JDSku {
 
     private long cid;
 
+    @Basic(fetch = FetchType.LAZY)
     @Column(columnDefinition = "TEXT")
     private String rawListContent;
 
+    @Basic(fetch = FetchType.LAZY)
     @Column(columnDefinition = "TEXT")
     private String rawItemContent;
 

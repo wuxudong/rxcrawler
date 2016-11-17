@@ -30,27 +30,20 @@ public class JDCrawlerMain {
 
         final DummyRedisScheduler scheduler = new DummyRedisScheduler(context.getBean(StringRedisTemplate.class));
 
-        boolean firstEnter = true;
+        Spider spider = Spider.create(context.getBean(PageProcessor.class))
+                .scheduler(scheduler)
+                .setSpiderListeners(Arrays.asList(scheduler))
+                .addPipeline(context.getBean(Pipeline.class));
 
-        while (firstEnter || !scheduler.isFinished()) {
-
-            scheduler.recycleFailedRequest();
-
-            Spider spider = Spider.create(context.getBean(PageProcessor.class))
-                    .scheduler(scheduler)
-                    .setSpiderListeners(Arrays.asList(scheduler))
-                    .addPipeline(context.getBean(Pipeline.class));
-
-            if (firstEnter && "restart".equals(args[0])) {
-                scheduler.clearAll();
-                spider.addRequest(RequestHelper.topCategoriesRequest());
-            }
-
-            spider.thread(15).run();
-
-            firstEnter = false;
-
+        if ("restart".equals(args[0])) {
+            scheduler.clearAll();
+            spider.addRequest(RequestHelper.topCategoriesRequest());
+        } else {
+            scheduler.mergeProcessingToPending();
         }
+
+        spider.thread(50).run();
+
 
         context.close();
 

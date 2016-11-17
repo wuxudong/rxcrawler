@@ -31,9 +31,12 @@ public class JDConfiguration {
 
     @Bean
     public PageProcessor jdPageProcessor() {
-        Site site = Site.me().setSleepTime(0).setRetryTimes(0).setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X " +
-                "10_12_1)" +
-                " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36");
+        Site site = Site.me().
+                setSleepTime(0).
+                setRetryTimes(0).
+                setCycleRetryTimes(10).
+                setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) " +
+                        "Chrome/54.0.2840.71 Safari/537.36");
 
         site.setTimeOut(30000);
 

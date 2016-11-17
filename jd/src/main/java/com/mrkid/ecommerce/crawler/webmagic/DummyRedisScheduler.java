@@ -2,6 +2,7 @@ package com.mrkid.ecommerce.crawler.webmagic;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
@@ -16,10 +17,10 @@ import us.codecraft.webmagic.scheduler.MonitorableScheduler;
 import us.codecraft.webmagic.scheduler.component.DuplicateRemover;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -38,7 +39,6 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
 
     private static final String PROCESSING_QUEUE_KEY = "crawler_processing_queue";
 
-
     private ObjectMapper objectMapper = new ObjectMapper();
 
     // a field in request extras, the unique id of request
@@ -56,13 +56,32 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
         setDuplicateRemover(this);
     }
 
-    public void recycleFailedRequest() {
-        final BoundHashOperations<String, String, String> operations = redisTemplate
-                .boundHashOps(getProcessingQueueKey());
+    /**
+     * It should only be called at beginning, not thread safe
+     */
+    public void mergeProcessingToPending() {
 
-        final Map<String, String> map = operations.entries();
+        // TODO make operation atomic
+        final Map<String, String> processing = redisTemplate
+                .<String, String>boundHashOps(getProcessingQueueKey()).entries();
 
-        redisTemplate.delete(getProcessingQueueKey());
+        final List<String> pending = redisTemplate.boundListOps(getPendingQueueKey()).range(0l, -1l);
+
+        clearAll();
+
+        // distinct use uuid
+        final Map<String, String> map = new LinkedHashMap<>();
+
+        for (String s : pending) {
+            try {
+                Request request = objectMapper.readValue(s, Request.class);
+                map.put(getRequestUUID(request), s);
+            } catch (IOException e) {
+                logger.error("fail to parse Request:" + s);
+            }
+        }
+
+        processing.entrySet().forEach(entry -> map.putIfAbsent(entry.getKey(), entry.getValue()));
 
         for (String line : map.values()) {
             redisTemplate.boundListOps(getPendingQueueKey()).rightPush(line);
@@ -74,13 +93,21 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
     @Override
     protected void pushWhenNoDuplicate(Request request, Task task) {
 
-        request.putExtra(REQUEST_UUID, UUID.randomUUID().toString());
+        assignRequestUUID(request);
         request.putExtra(TASK_UUID, task.getUUID());
 
         try {
             redisTemplate.boundListOps(getPendingQueueKey()).rightPush(objectMapper.writeValueAsString(request));
         } catch (JsonProcessingException e) {
         }
+    }
+
+    private void assignRequestUUID(Request request) {
+
+        if (StringUtils.isBlank(getRequestUUID(request))) {
+            request.putExtra(REQUEST_UUID, UUID.randomUUID().toString());
+        }
+
     }
 
     @Override
@@ -95,7 +122,7 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
 
             Request request = objectMapper.readValue(line, Request.class);
             redisTemplate.boundHashOps(getProcessingQueueKey())
-                    .put(request.getExtra(REQUEST_UUID), line);
+                    .put(getRequestUUID(request), line);
 
 
             // HttpDownloader require nameValuePair as NameValuePair[],
@@ -112,6 +139,10 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
         } catch (IOException e) {
             return null;
         }
+    }
+
+    private String getRequestUUID(Request request) {
+        return (String) request.getExtra(REQUEST_UUID);
     }
 
 
@@ -156,19 +187,16 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
     public void onError(Request request) {
         try {
             errorLogger.error(objectMapper.writeValueAsString(request));
+            finishProcessing(request);
         } catch (JsonProcessingException e) {
 
         }
     }
 
     private void finishProcessing(Request request) {
-        redisTemplate.boundHashOps(getProcessingQueueKey()).delete(request.getExtra(REQUEST_UUID));
+        redisTemplate.boundHashOps(getProcessingQueueKey()).delete(getRequestUUID(request));
     }
 
-
-    public boolean isFinished() {
-        return redisTemplate.boundHashOps(getProcessingQueueKey()).size() == 0l;
-    }
 
     public void clearAll() {
         redisTemplate.delete(getProcessingQueueKey());
