@@ -42,7 +42,7 @@ public class JDCrawlerMain {
             scheduler.mergeProcessingToPending();
         }
 
-        spider.thread(100).run();
+        spider.thread(50).run();
 
         context.close();
 
