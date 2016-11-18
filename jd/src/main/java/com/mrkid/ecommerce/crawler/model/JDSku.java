@@ -22,10 +22,12 @@ public class JDSku {
     private long cid;
 
     @Basic(fetch = FetchType.LAZY)
+    @Lob
     @Column(columnDefinition = "TEXT")
     private String rawListContent;
 
     @Basic(fetch = FetchType.LAZY)
+    @Lob
     @Column(columnDefinition = "TEXT")
     private String rawItemContent;
 
