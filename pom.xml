@@ -131,6 +131,11 @@
                 <version>2.5</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpasyncclient</artifactId>
+                <version>4.2.5</version>
+            </dependency>
 
             <dependency>
                 <groupId>junit</groupId>

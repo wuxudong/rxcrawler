@@ -4,8 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mrkid.ecommerce.crawler.dto.JDCategoryDTO;
 import com.mrkid.ecommerce.crawler.dto.JDSkuDTO;
-import com.mrkid.ecommerce.crawler.utils.JDUtils;
+import io.reactivex.Flowable;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
@@ -24,20 +25,17 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 
 /**
  * User: xudong
@@ -56,87 +54,62 @@ public class JDCrawler {
     @Autowired
     private ScriptEngine scriptEngine;
 
-    public CompletableFuture<List<JDCategoryDTO>> getAllCategories() {
-        return topCategories().thenCompose(topCategories -> {
-                    List<CompletableFuture<JDCategoryDTO>> list = new ArrayList<>();
+    public Flowable<JDCategoryDTO> getAllCategories() {
+        return topCategories().flatMap(top ->
+                Flowable.merge(
+                        Flowable.just(top),
+                        getSubCategories(top.getCid())
+                                .flatMap(mid ->
+                                        Flowable.merge(Flowable.just(mid), Flowable.fromArray(mid.getCatelogyList()))
+                                )));
+    }
 
-                    for (JDCategoryDTO top : topCategories) {
-                        list.add(completeCategory(top));
+    public Flowable<JDSkuDTO> getSku(JDCategoryDTO subCategory) {
+        return getSkuPageGreatThan(subCategory, 1);
+    }
+
+    private Flowable<JDSkuDTO> getSkuPageGreatThan(JDCategoryDTO subCategory, int page) {
+        return getSkuPageEq(subCategory, page).flatMap(list -> {
+                    if (list.isEmpty()) return Flowable.empty();
+                    else {
+                        return Flowable.merge(Flowable.fromIterable(list)
+                                , getSkuPageGreatThan(subCategory, page + 1));
                     }
-
-                    return CompletableFuture.allOf(list.toArray(new CompletableFuture[list.size()])).thenApply(v -> list
-                            .stream().map(CompletableFuture::join).collect(Collectors.toList()));
                 }
         );
     }
 
-    public CompletableFuture<List<JDSkuDTO>> getSku(JDCategoryDTO subCategory) {
-        AtomicInteger page = new AtomicInteger(1);
+    private Flowable<List<JDSkuDTO>> getSkuPageEq(JDCategoryDTO subCategory, int page) {
+        return getListPageResponse(subCategory, page).map(res -> {
+            final JsonNode value = objectMapper.readTree(objectMapper.readTree(res).get("value").asText());
 
-        List<JDSkuDTO> result = new ArrayList<>();
+            List<JDSkuDTO> result = new ArrayList<>();
+            for (JsonNode node : value.get("wareList")) {
+                JDSkuDTO sku = new JDSkuDTO();
+                sku.setId(node.get("wareId").asLong());
+                sku.setName(node.get("wname").asText());
+                sku.setPrice(BigDecimal.valueOf(node.get("jdPrice").asDouble()));
 
-        Function<List<JDSkuDTO>, CompletionStage<List<JDSkuDTO>>> nextPage = new Function<
-                List<JDSkuDTO>, CompletionStage<List<JDSkuDTO>>>() {
-            @Override
-            public CompletionStage<List<JDSkuDTO>> apply(List<JDSkuDTO> list) {
-                System.out.println("finish page " + page.get() + " of category " + subCategory.getCid());
-                if (list.isEmpty()) {
-                    return CompletableFuture.completedFuture(result);
-                } else {
-                    result.addAll(list);
-
-                    return getSku(subCategory, page.incrementAndGet()).thenCompose(this);
+                if (sku.getId() != 0) {
+                    result.add(sku);
                 }
             }
-        };
 
-        return getSku(subCategory, page.get()).thenCompose(nextPage);
-    }
-
-    public CompletableFuture<Long> getSkuCount(final JDCategoryDTO subCategory) {
-        return getListPageResponse(subCategory, 1).thenApply(res -> {
-            try {
-                final JsonNode value = objectMapper.readTree(objectMapper.readTree(res).get("value").asText());
-                return value.get("wareCount").asLong();
-            } catch (IOException e) {
-                // TODO
-                return 0l;
-            }
+            return result;
         });
 
 
     }
 
-    private CompletableFuture<List<JDSkuDTO>> getSku(JDCategoryDTO subCategory, int page) {
-        return getListPageResponse(subCategory, page).thenApply(res -> {
-            try {
-                final JsonNode value = objectMapper.readTree(objectMapper.readTree(res).get("value").asText());
-
-                List<JDSkuDTO> result = new ArrayList<>();
-                for (JsonNode node : value.get("wareList")) {
-                    JDSkuDTO sku = new JDSkuDTO();
-                    sku.setId(node.get("wareId").asLong());
-                    sku.setName(node.get("wname").asText());
-                    sku.setPrice(BigDecimal.valueOf(node.get("jdPrice").asDouble()));
-
-                    if (sku.getId() != 0) {
-                        result.add(sku);
-                    } else {
-                        // TODO
-                    }
-                }
-
-                return result;
-            } catch (IOException e) {
-                // TODO
-                return new ArrayList<JDSkuDTO>();
-            }
+    private Flowable<Long> getSkuCount(final JDCategoryDTO subCategory) {
+        return getListPageResponse(subCategory, 1).map(res -> {
+            final JsonNode value = objectMapper.readTree(objectMapper.readTree(res).get("value").asText());
+            return value.get("wareCount").asLong();
         });
-
-
     }
 
-    private CompletableFuture<String> getListPageResponse(JDCategoryDTO subCategory, int page) {
+
+    private Flowable<String> getListPageResponse(JDCategoryDTO subCategory, int page) {
         HttpPost post = new HttpPost("http://so.m.jd.com/ware/searchList.action");
         List<NameValuePair> form = new ArrayList<>();
 
@@ -159,40 +132,25 @@ public class JDCrawler {
         return HttpAsyncClientUtils.execute(httpAsyncClient, post);
     }
 
-    private CompletableFuture<JDCategoryDTO> completeCategory(JDCategoryDTO top) {
-        return
-                getSubCategories(top.getCid()).thenApply(subCategories -> {
-                    top.setCatelogyList(subCategories);
-                    return top;
-                });
-
-    }
-
-    private CompletableFuture<JDCategoryDTO[]> topCategories() {
-
+    private Flowable<JDCategoryDTO> topCategories() {
         String url = "http://so.m.jd.com/category/all.html";
-        return HttpAsyncClientUtils.execute(httpAsyncClient, new HttpGet(url)).thenApply(content -> extractTopCategories
+        return HttpAsyncClientUtils.execute(httpAsyncClient, new HttpGet(url)).flatMap(content -> extractTopCategories
                 (content));
     }
 
-    private CompletableFuture<JDCategoryDTO[]> getSubCategories(long topCid) {
+    private Flowable<JDCategoryDTO> getSubCategories(long topCid) {
         String url = "http://so.m.jd.com/category/list.action?_format_=json&catelogyId=" + topCid;
-        return HttpAsyncClientUtils.execute(httpAsyncClient, new HttpGet(url)).thenApply(content -> {
-            try {
-                final JsonNode jsonNode = objectMapper.readTree(objectMapper.readTree(content).get("catalogBranch")
-                        .asText());
-                final JDCategoryDTO[] categories = objectMapper.treeToValue
-                        (jsonNode.get("data"), JDCategoryDTO[].class);
-                return categories;
-            } catch (IOException e) {
-                // TODO
-                return new JDCategoryDTO[0];
-            }
-        });
+        return HttpAsyncClientUtils.execute(httpAsyncClient, new HttpGet(url)).flatMap(content -> {
+            final JsonNode jsonNode = objectMapper.readTree(objectMapper.readTree(content).get("catalogBranch")
+                    .asText());
+            final JDCategoryDTO[] categories = objectMapper.treeToValue
+                    (jsonNode.get("data"), JDCategoryDTO[].class);
+            return Flowable.fromArray(categories);
+        }).onErrorResumeNext(Flowable.empty());
 
     }
 
-    private JDCategoryDTO[] extractTopCategories(String content) {
+    private Flowable<JDCategoryDTO> extractTopCategories(String content) throws ScriptException, IOException {
         final Document document = Jsoup.parse(content);
         final Elements elements = document.getElementsByTag("script");
 
@@ -210,63 +168,39 @@ public class JDCrawler {
 
                         String jsAssignment = wholeData.substring(start, end + 1);
 
-                        try {
-                            final Object o = scriptEngine.eval("var jsArgs = {};" + jsAssignment + "jsArgs;");
-                            final JsonNode list = objectMapper.readTree(objectMapper.writeValueAsString
-                                    (o)).get("category").get("roorList").get
-                                    ("catelogyList");
+                        final Object o = scriptEngine.eval("var jsArgs = {};" + jsAssignment + "jsArgs;");
+                        final JsonNode list = objectMapper.readTree(objectMapper.writeValueAsString(o))
+                                .get("category").get("roorList").get("catelogyList");
 
-                            final Iterator<JsonNode> iterator = list.elements();
-                            List<JDCategoryDTO> categories = new ArrayList<>();
-                            while (iterator.hasNext()) {
-                                categories.add(objectMapper.treeToValue(iterator.next(), JDCategoryDTO.class));
-                            }
-
-                            return categories.toArray(new JDCategoryDTO[0]);
-                        } catch (Exception e) {
-                            // TODO
+                        final Iterator<JsonNode> iterator = list.elements();
+                        List<JDCategoryDTO> categories = new ArrayList<>();
+                        while (iterator.hasNext()) {
+                            categories.add(objectMapper.treeToValue(iterator.next(), JDCategoryDTO.class));
                         }
+
+                        return Flowable.fromIterable(categories);
                     }
-
-
                 }
             }
 
         }
 
-        // TODO
-        return new JDCategoryDTO[0];
+        return Flowable.empty();
     }
 
     public static void main(String[] args) throws InterruptedException {
         final ConfigurableApplicationContext run = SpringApplication.run(JDCrawler.class);
         final JDCrawler jdCrawler = run.getBean(JDCrawler.class);
-        final List<JDCategoryDTO> categories = jdCrawler.getAllCategories().join();
 
-        final Function<JDCategoryDTO, Stream<? extends JDCategoryDTO>> drill = c -> c
-                .getCatelogyList().length == 0 ? Stream.of(c) : Arrays.asList(c
-                .getCatelogyList()).stream();
-        final List<JDCategoryDTO> collect = categories.stream()
-                .filter(c -> JDUtils.shouldFetchItems(c.getCid()))
-                .flatMap(drill)
-                .flatMap(drill)
-                .flatMap(drill)
-                .flatMap(drill)
-                .filter(c -> StringUtils.isNotBlank(c.getPath()))
-                .collect(Collectors.toList());
+        ConcurrentHashMap<JDCategoryDTO, Long> countMap = new ConcurrentHashMap<>();
+        jdCrawler.getAllCategories()
+                .filter(category -> RequestHelper.shouldFetchItems(category))
+                .flatMap(
+                        category ->
+                                jdCrawler.getSkuCount(category).map(count -> new ImmutablePair<>(category, count)))
+                .blockingSubscribe(pair -> countMap.put(pair.left, pair.right));
 
-        AtomicLong total = new AtomicLong(0);
-
-        for (JDCategoryDTO c : collect) {
-            if (StringUtils.isNotBlank(c.getPath())) {
-                jdCrawler.getSkuCount(c).thenAccept(count -> {
-                    System.out.println(c.getPath() + " " + c.getName() + " " + count);
-                    total.addAndGet(count);
-                }).join();
-            }
-            Thread.sleep(5);
-        }
-
+        final Long total = countMap.values().stream().reduce(0l, (l1, l2) -> l1 + l2);
         System.out.println("total " + total);
     }
 

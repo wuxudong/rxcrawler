@@ -1,12 +1,15 @@
 package com.mrkid.ecommerce.crawler.httpasyncclient;
 
 import com.mrkid.ecommerce.crawler.JDCrawlerException;
+import io.reactivex.Flowable;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -17,8 +20,12 @@ import java.util.concurrent.CompletableFuture;
  * Time: 5:41 PM
  */
 public class HttpAsyncClientUtils {
-    public static CompletableFuture<String> execute(CloseableHttpAsyncClient client, HttpUriRequest request) {
+
+    private static Logger logger = LoggerFactory.getLogger(HttpAsyncClientUtils.class);
+    public static Flowable<String> execute(CloseableHttpAsyncClient client, HttpUriRequest request) {
         CompletableFuture<String> promise = new CompletableFuture<>();
+
+        logger.info("request " + request.getURI());
 
         client.execute(request, new FutureCallback<HttpResponse>() {
             @Override
@@ -48,7 +55,19 @@ public class HttpAsyncClientUtils {
             }
         });
 
-        return promise;
+        return toFlowable(promise);
+    }
+
+    private static  <T> Flowable<T> toFlowable(CompletableFuture<T> future) {
+        return Flowable.<T>defer(() -> emitter ->
+                future.whenComplete((result, error) -> {
+                    if (error != null) {
+                        emitter.onError(error);
+                    } else {
+                        emitter.onNext(result);
+                        emitter.onComplete();
+                    }
+                })).onExceptionResumeNext(Flowable.empty());
     }
 
 }

@@ -1,8 +1,7 @@
 package com.mrkid.ecommerce.crawler.webmagic;
 
 import com.mrkid.ecommerce.crawler.dto.JDSkuDTO;
-import com.mrkid.ecommerce.crawler.model.JDSku;
-import com.mrkid.ecommerce.crawler.service.JDService;
+import com.mrkid.ecommerce.crawler.facade.JDFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import us.codecraft.webmagic.Request;
@@ -21,14 +20,14 @@ import java.util.List;
 public class SkuPipeline implements SubPipeline {
 
     @Autowired
-    private JDService jdService;
+    private JDFacade jdFacade;
 
     @Override
     public MatchOther processResult(ResultItems resultItems, Task task) {
 
         List<JDSkuDTO> categories = resultItems.get("skus");
         for (JDSkuDTO skuDTO : categories) {
-            jdService.saveSku(skuDTO);
+            jdFacade.saveSku(skuDTO);
         }
 
         return MatchOther.NO;

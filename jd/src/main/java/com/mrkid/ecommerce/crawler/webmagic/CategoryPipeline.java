@@ -1,8 +1,7 @@
 package com.mrkid.ecommerce.crawler.webmagic;
 
 import com.mrkid.ecommerce.crawler.dto.JDCategoryDTO;
-import com.mrkid.ecommerce.crawler.model.JDCategory;
-import com.mrkid.ecommerce.crawler.service.JDService;
+import com.mrkid.ecommerce.crawler.facade.JDFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import us.codecraft.webmagic.Request;
@@ -21,7 +20,7 @@ import java.util.List;
 public class CategoryPipeline implements SubPipeline {
 
     @Autowired
-    private JDService jdService;
+    private JDFacade jdFacade;
 
     @Override
     public MatchOther processResult(ResultItems resultItems, Task task) {
@@ -29,7 +28,7 @@ public class CategoryPipeline implements SubPipeline {
         List<JDCategoryDTO> categories = resultItems.get("categories");
         for (JDCategoryDTO categoryDTO : categories) {
 
-            jdService.saveCategory(categoryDTO);
+            jdFacade.saveCategory(categoryDTO);
         }
 
         return MatchOther.NO;

@@ -1,12 +1,13 @@
 package com.mrkid.ecommerce.crawler;
 
+import com.mrkid.ecommerce.crawler.webmagic.AsyncDownloader;
+import com.mrkid.ecommerce.crawler.webmagic.AsyncSpider;
 import com.mrkid.ecommerce.crawler.webmagic.DummyRedisScheduler;
 import com.mrkid.ecommerce.crawler.webmagic.RequestHelper;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import us.codecraft.webmagic.Spider;
 import us.codecraft.webmagic.pipeline.Pipeline;
 import us.codecraft.webmagic.processor.PageProcessor;
 
@@ -30,19 +31,28 @@ public class JDCrawlerMain {
 
         final DummyRedisScheduler scheduler = context.getBean(DummyRedisScheduler.class);
 
-        Spider spider = Spider.create(context.getBean(PageProcessor.class))
+
+        AsyncDownloader asyncDownloader = new AsyncDownloader(context.getBean(CloseableHttpAsyncClient.class));
+
+
+        final AsyncSpider asyncSpider = new AsyncSpider(context.getBean(PageProcessor.class));
+        asyncSpider
+                .setAsyncDownloader(asyncDownloader)
                 .scheduler(scheduler)
                 .setSpiderListeners(Arrays.asList(scheduler))
                 .addPipeline(context.getBean(Pipeline.class));
 
+
         if ("restart".equals(args[0])) {
             scheduler.clearAll();
-            spider.addRequest(RequestHelper.topCategoriesRequest());
+            asyncSpider.addRequest(RequestHelper.topCategoriesRequest());
         } else {
             scheduler.mergeProcessingToPending();
         }
 
-        spider.thread(50).run();
+        asyncSpider.thread(8).run();
+
+
 
         context.close();
 

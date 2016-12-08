@@ -2,6 +2,7 @@ package com.mrkid.ecommerce.crawler.httpasyncclient;
 
 import com.mrkid.ecommerce.crawler.dto.JDCategoryDTO;
 import com.mrkid.ecommerce.crawler.dto.JDSkuDTO;
+import io.reactivex.Flowable;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,8 +24,7 @@ public class JDCrawlerTest {
 
     @org.junit.Test
     public void getAllCategories() throws Exception {
-        final List<JDCategoryDTO> categories = jdCrawler.getAllCategories().join();
-        System.out.println(categories);
+        jdCrawler.getAllCategories().blockingSubscribe(System.out::println);
     }
 
     @org.junit.Test
@@ -35,9 +35,9 @@ public class JDCrawlerTest {
         category.setCid(700);
 
         category.setName("路由器");
-        final CompletableFuture<List<JDSkuDTO>> sku = jdCrawler.getSku(category);
+        final Flowable<JDSkuDTO> sku = jdCrawler.getSku(category);
 
-        sku.thenAccept(l -> System.out.println(l)).join();
+        sku.blockingSubscribe(l -> System.out.println(l));
 
     }
 

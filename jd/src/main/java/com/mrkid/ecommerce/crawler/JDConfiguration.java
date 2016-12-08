@@ -1,6 +1,9 @@
 package com.mrkid.ecommerce.crawler;
 
 import org.apache.http.HttpHost;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,7 +44,7 @@ public class JDConfiguration {
         site.setTimeOut(30000);
 
         // use squid as proxy, you may add parent of proxies in squid
-        site.setHttpProxy(new HttpHost("127.0.0.1", 3128));
+//        site.setHttpProxy(new HttpHost("127.0.0.1", 3128));
 
         return site;
     }
@@ -62,5 +65,26 @@ public class JDConfiguration {
         pipeline.setSubPipeline(subPipelines.toArray(new SubPipeline[subPipelines.size()]));
 
         return pipeline;
+    }
+
+    @Bean
+    public CloseableHttpAsyncClient asyncClient(Site site) {
+        final int TIMEOUT = 60 * 1000;
+        // reactor config
+        IOReactorConfig reactorConfig = IOReactorConfig.custom()
+                .setConnectTimeout(TIMEOUT)
+                .setSoTimeout(TIMEOUT).build();
+
+        HttpAsyncClientBuilder asyncClientBuilder = HttpAsyncClientBuilder.create();
+        asyncClientBuilder.setDefaultIOReactorConfig(reactorConfig);
+
+        asyncClientBuilder.setUserAgent(site.getUserAgent());
+
+        asyncClientBuilder.setMaxConnPerRoute(500).setMaxConnTotal(500);
+
+        final CloseableHttpAsyncClient asyncClient = asyncClientBuilder.build();
+        asyncClient.start();
+
+        return asyncClient;
     }
 }

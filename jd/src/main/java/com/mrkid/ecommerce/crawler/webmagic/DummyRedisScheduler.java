@@ -153,6 +153,7 @@ public class DummyRedisScheduler extends DuplicateRemovedScheduler implements Mo
 
             return request;
         } catch (IOException e) {
+            errorLogger.error("fail to poll request",e);
             return null;
         }
     }

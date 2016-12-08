@@ -35,51 +35,28 @@ public class JDService {
     private JDSkuHistoryRepository skuHistoryRepository;
 
     @Transactional
-    public JDCategory saveCategory(JDCategoryDTO categoryDTO) {
-        assert categoryDTO.getCid() != 0;
-        assert StringUtils.isBlank(categoryDTO.getName());
-
-        JDCategory category = new JDCategory();
-        category.setCid(categoryDTO.getCid());
-        category.setName(categoryDTO.getName());
-        category.setPath(categoryDTO.getPath());
-        category.setLevel(categoryDTO.getLevel());
-
-        category.setVirtual(categoryDTO.isVirtual());
+    public JDCategory saveCategory(JDCategory category) {
 
         return categoryRepository.save(category);
     }
 
 
     @Transactional
-    public JDSkuPriceHistory saveSku(JDSkuDTO skuDTO) {
-        assert skuDTO.getId() != 0;
-        assert skuDTO.getCid() != 0;
-        assert skuDTO.getPrice() != null;
-        assert StringUtils.isBlank(skuDTO.getName());
-
-
-        JDSku sku = new JDSku();
-        sku.setId(skuDTO.getId());
-        sku.setName(skuDTO.getName());
-        sku.setRawListContent(skuDTO.getRawListContent());
-        sku.setRawItemContent(skuDTO.getRawItemContent());
-
-        sku.setCid(skuDTO.getCid());
-
+    public JDSkuPriceHistory saveSku(JDSku sku, BigDecimal price) {
         skuRepository.save(sku);
 
 
         final Date current = new Date();
 
-        JDSkuPriceHistory skuPriceHistory = skuHistoryRepository.findFirstBySkuIdOrderByLastCheckTimeDesc(skuDTO.getId());
+        final long id = sku.getId();
 
-        BigDecimal price = skuDTO.getPrice().setScale(2);
+        JDSkuPriceHistory skuPriceHistory = skuHistoryRepository.findFirstBySkuIdOrderByLastCheckTimeDesc(id);
+
         if (skuPriceHistory != null && skuPriceHistory.getPrice().setScale(2).equals(price)) {
             skuPriceHistory.setLastCheckTime(current);
         } else {
             skuPriceHistory = new JDSkuPriceHistory();
-            skuPriceHistory.setSkuId(skuDTO.getId());
+            skuPriceHistory.setSkuId(id);
             skuPriceHistory.setPrice(price);
 
             skuPriceHistory.setFirstCheckTime(current);
