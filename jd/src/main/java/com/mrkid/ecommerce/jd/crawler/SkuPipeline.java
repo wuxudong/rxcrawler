@@ -24,8 +24,8 @@ public class SkuPipeline implements SubPipeline {
     @Override
     public MatchOther processResult(ResultItems resultItems) {
 
-        List<JDSkuDTO> categories = resultItems.get("skus");
-        for (JDSkuDTO skuDTO : categories) {
+        List<JDSkuDTO> skus = resultItems.get("skus");
+        for (JDSkuDTO skuDTO : skus) {
             jdFacade.saveSku(skuDTO);
         }
 
@@ -33,8 +33,7 @@ public class SkuPipeline implements SubPipeline {
     }
 
     @Override
-    public boolean match(Request page) {
-        final Object pageType = page.getExtra(PageType.KEY);
-        return PageType.LIST.equals(pageType);
+    public boolean match(Request request) {
+        return PageType.LIST.equals(request.getPageType());
     }
 }

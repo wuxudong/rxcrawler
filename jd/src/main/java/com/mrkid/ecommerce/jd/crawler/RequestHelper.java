@@ -74,6 +74,8 @@ public class RequestHelper {
         request.setForm(form);
         request.getExtras().put("category", category);
 
+        request.setPageType(PageType.LIST);
+
         return request;
     }
 }

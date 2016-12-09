@@ -40,15 +40,14 @@ public class JDConfiguration {
 
     @Bean
     public Site site() {
-
         Site site = new Site();
-        site.setSleepTime(1000);
-        site.setRetrySleepTime(2000);
-        site.setRetryTimes(2);
+        site.setSleepTime(0);
+        site.setRetrySleepTime(1000);
+        site.setRetryTimes(5);
         site.setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) " +
                 "Chrome/54.0.2840.71 Safari/537.36");
 
-        site.setTimeOut(10 * 1000);
+        site.setTimeOut(30 * 1000);
 
         // use squid as proxy, you may add parent of proxies in squid
         site.setHttpProxy(new HttpHost("127.0.0.1", 3128));
@@ -117,7 +116,7 @@ public class JDConfiguration {
         spider.setSite(site);
         spider.setScheduler(scheduler);
         spider.setPipeline(pipeline);
-        spider.setMaxConcurrency(1);
+        spider.setMaxConcurrency(200);
         return spider;
     }
 }

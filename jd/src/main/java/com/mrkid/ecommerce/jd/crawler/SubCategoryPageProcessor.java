@@ -37,15 +37,15 @@ public class SubCategoryPageProcessor implements SubPageProcessor {
                 (jsonNode.get("data"), JDCategoryDTO[].class);
 
 
-        List<JDCategoryDTO> flatten = new ArrayList<>();
+        List<JDCategoryDTO> list = new ArrayList<>();
 
 
         for (JDCategoryDTO category : categories) {
-            flatten.add(category);
+            list.add(category);
 
             if (category.getCatelogyList() != null) {
                 for (JDCategoryDTO subCategory : category.getCatelogyList()) {
-                    flatten.add(subCategory);
+                    list.add(subCategory);
                     if (StringUtils.isNotBlank(subCategory.getPath()) && !subCategory.isVirtual()) {
 
                         final Request request = RequestHelper.listRequest(subCategory, 1);
@@ -57,7 +57,7 @@ public class SubCategoryPageProcessor implements SubPageProcessor {
             }
         }
 
-        page.getResultItems().put("categories", flatten);
+        page.getResultItems().put("categories", list);
 
 
         return MatchOther.NO;
