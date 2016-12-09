@@ -26,8 +26,10 @@
         </encoder>
     </appender>
 
+    <logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="ERROR"/>
+
     <root level="INFO">
-        <appender-ref ref="rollingFile" />
+        <appender-ref ref="rollingFile"/>
     </root>
 
     <logger name="error" level="ERROR">

@@ -5,21 +5,27 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.mrkid.ecommerce</groupId>
+        <groupId>com.mrkid</groupId>
         <artifactId>crawler</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
 
-    <groupId>com.mrkid.ecommerce</groupId>
-    <artifactId>jd</artifactId>
+    <groupId>com.mrkid</groupId>
+    <artifactId>jd-crawler</artifactId>
 
     <properties>
-        <start-class>com.mrkid.ecommerce.crawler.JDCrawlerMain</start-class>
+        <start-class>com.mrkid.ecommerce.jd.JDCrawlerMain</start-class>
     </properties>
 
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.mrkid</groupId>
+            <artifactId>rxcrawler</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
@@ -28,16 +34,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>us.codecraft</groupId>
-            <artifactId>webmagic-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>us.codecraft</groupId>
-            <artifactId>webmagic-extension</artifactId>
         </dependency>
 
         <dependency>
@@ -60,34 +56,10 @@
             <artifactId>hibernate-jpamodelgen</artifactId>
         </dependency>
 
-
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpasyncclient</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jsoup</groupId>
-            <artifactId>jsoup</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20160810</version>
-        </dependency>
-
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
-
-        <!--it is required by webmagic-->
-        <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-        </dependency>
-
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -95,20 +67,10 @@
         </dependency>
 
         <dependency>
-            <groupId>commons-beanutils</groupId>
-            <artifactId>commons-beanutils</artifactId>
-        </dependency>
-
-
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -117,20 +79,27 @@
         <dependency>
             <groupId>io.reactivex.rxjava2</groupId>
             <artifactId>rxjava</artifactId>
-            <version>2.0.1</version>
 
         </dependency>
         <dependency>
             <groupId>org.reactivestreams</groupId>
             <artifactId>reactive-streams</artifactId>
-            <version>1.0.0</version>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpasyncclient</artifactId>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
 
 
     </dependencies>
