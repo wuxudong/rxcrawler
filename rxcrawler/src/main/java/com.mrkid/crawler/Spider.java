@@ -46,8 +46,7 @@ public class Spider {
         Flowable.generate(generator())
                 .doOnNext(r -> runningCount.incrementAndGet())
                 .flatMap(request -> download(request), maxConcurrency)
-                .flatMap(optional ->
-                {
+                .flatMap(optional -> {
                     if (optional.isPresent()) {
                         return Flowable.just(optional).subscribeOn(Schedulers.io())
                                 .doOnNext(op -> pageProcessor.process(op.get()))
@@ -63,8 +62,8 @@ public class Spider {
                         return Flowable.just(optional);
                     }
                 })
-
-                .blockingSubscribe(optional -> runningCount.decrementAndGet());
+                .doOnNext(optional -> runningCount.decrementAndGet())
+                .blockingSubscribe();
     }
 
     private Consumer<Emitter<Request>> generator() {

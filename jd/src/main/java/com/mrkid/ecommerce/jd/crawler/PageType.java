@@ -6,8 +6,6 @@ package com.mrkid.ecommerce.jd.crawler;
  * Time: 5:21 PM
  */
 public class PageType {
-    public static final String KEY = "PAGE_TYPE";
-
     public static final Integer TOP_CATEGORY = 1;
     public static final Integer SUB_CATEGORY = 2;
     public static final Integer LIST = 3;

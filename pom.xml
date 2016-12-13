@@ -175,6 +175,7 @@
     <modules>
         <module>jd</module>
         <module>rxcrawler</module>
+        <module>itjuzi</module>
     </modules>
 
 
