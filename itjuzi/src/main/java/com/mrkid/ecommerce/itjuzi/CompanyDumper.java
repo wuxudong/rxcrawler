@@ -19,7 +19,6 @@ public class CompanyDumper {
     }
 
     private static File getFile(long id) {
-        Writer fileWriter = null;
         File dir = new File("output/" + id / 1000);
         if (!dir.exists()) {
             dir.mkdirs();

@@ -81,11 +81,14 @@ public class HttpAsyncClientDownloader implements Downloader {
                 throw new UnsupportedOperationException(request.getMethod() + " is not supported");
         }
 
-        logger.info("download {} method {} form {}", request.getUrl(), request.getMethod(), request.getForm());
+        logger.info("start downloading {} method {} form {}", request.getUrl(), request.getMethod(), request.getForm());
         client.execute(httpUriRequest, new FutureCallback<HttpResponse>() {
             @Override
             public void completed(HttpResponse httpResponse) {
                 final int status = httpResponse.getStatusLine().getStatusCode();
+                logger.info("finish download {} method {} form {} status {}", request.getUrl(),
+                        request.getMethod(), request.getForm(), status);
+
                 if (status != HttpStatus.SC_OK) {
                     promise.completeExceptionally(new CrawlerException(request.getUrl() + " return " + status));
                 } else {
