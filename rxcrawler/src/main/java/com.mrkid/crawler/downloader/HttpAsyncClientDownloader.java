@@ -108,6 +108,9 @@ public class HttpAsyncClientDownloader implements Downloader {
 
             @Override
             public void failed(Exception e) {
+                logger.info("fail downloading {} method {} form {} exception {}", request.getUrl(),
+                        request.getMethod(), request.getForm(), e.getClass().getName() + ":" + e.getMessage());
+
                 promise.completeExceptionally(new CrawlerException(e));
             }
 
