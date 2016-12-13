@@ -28,7 +28,7 @@ public class RequestHelper {
 
 
     public static Request pageRequest(int page) {
-        String url = "https://cobra.itjuzi.com/api/company";
+        String url = "http://cobra.itjuzi.com/api/company";
         if (page != 0) {
             url = url + "?page=" + page;
         }
@@ -39,7 +39,7 @@ public class RequestHelper {
     }
 
     public static Request companyRequest(long id) {
-        String url = "https://cobra.itjuzi.com/api/company" + "/" + id;
+        String url = "http://cobra.itjuzi.com/api/company" + "/" + id;
         Request request = new Request(url);
         request.setPageType(PageType.COMPANY);
         request.putExtra("id", id);

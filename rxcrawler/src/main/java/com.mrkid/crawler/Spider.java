@@ -100,7 +100,8 @@ public class Spider {
                         });
 
 
-        return downloader.download(request).map(page -> Optional.of(page))
+        return Flowable.defer(() -> downloader.download(request))
+                .map(page -> Optional.of(page))
                 .delay(site.getSleepTime(), TimeUnit.MILLISECONDS)
                 .retryWhen(retry)
                 .onErrorResumeNext(throwable -> {

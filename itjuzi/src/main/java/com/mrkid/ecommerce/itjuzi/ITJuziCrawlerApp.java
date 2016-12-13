@@ -17,7 +17,6 @@ import java.io.IOException;
 @SpringBootApplication
 public class ITJuziCrawlerApp {
     public static void main(String[] args) throws ScriptException, ParseException, IOException, InterruptedException {
-        final ConfigurableApplicationContext context = SpringApplication.run(ITJuziCrawlerApp.class);
 
         Options options = new Options();
 
@@ -34,6 +33,9 @@ public class ITJuziCrawlerApp {
             return;
 
         }
+
+        final ConfigurableApplicationContext context = SpringApplication.run(ITJuziCrawlerApp.class);
+
         Spider spider = context.getBean(Spider.class);
 
         final String action = cmd.getOptionValue("action");
