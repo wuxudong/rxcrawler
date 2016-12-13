@@ -16,6 +16,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,18 +90,28 @@ public class HttpAsyncClientDownloader implements Downloader {
                 logger.info("finish download {} method {} form {} status {}", request.getUrl(),
                         request.getMethod(), request.getForm(), status);
 
-                if (status != HttpStatus.SC_OK) {
-                    promise.completeExceptionally(new CrawlerException(request.getUrl() + " return " + status));
-                } else {
-                    try {
+
+                try {
+                    if (status != HttpStatus.SC_OK) {
+                        promise.completeExceptionally(new CrawlerException(request.getUrl() + " return " + status));
+                    } else {
                         final String value = IOUtils.toString(httpResponse.getEntity().getContent(), "utf-8");
+
 
                         Page page = new Page(request);
                         page.setRawText(value);
 
                         promise.complete(page);
+                    }
+                } catch (IOException e) {
+                    promise.completeExceptionally(new CrawlerException(e));
+                } finally {
+                    try {
+                        if (httpResponse != null) {
+                            EntityUtils.consume(httpResponse.getEntity());
+                        }
                     } catch (IOException e) {
-                        promise.completeExceptionally(new CrawlerException(e));
+                        logger.warn("close response fail", e);
                     }
                 }
 
