@@ -33,14 +33,14 @@ public class ITJuziConfiguration {
         Site site = new Site();
         site.setSleepTime(0);
         site.setRetrySleepTime(1000);
-        site.setRetryTimes(5);
+        site.setRetryTimes(10);
         site.setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) " +
                 "Chrome/54.0.2840.71 Safari/537.36");
 
         site.setTimeOut(30 * 1000);
 
         // use squid as proxy, you may add parent of proxies in squid
-//        site.setHttpProxy(new HttpHost("127.0.0.1", 3128));
+        site.setHttpProxy(new HttpHost("127.0.0.1", 3128));
 
         return site;
     }
@@ -84,7 +84,7 @@ public class ITJuziConfiguration {
             }
         });
 
-        asyncClientBuilder.setMaxConnPerRoute(100).setMaxConnTotal(100);
+        asyncClientBuilder.setMaxConnPerRoute(1000).setMaxConnTotal(1000);
 
         final CloseableHttpAsyncClient asyncClient = asyncClientBuilder.build();
         asyncClient.start();
