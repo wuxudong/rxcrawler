@@ -3,6 +3,7 @@ package com.mrkid.crawler;
 import com.mrkid.crawler.downloader.Downloader;
 import com.mrkid.crawler.pipeline.Pipeline;
 import com.mrkid.crawler.processor.PageProcessor;
+import com.mrkid.crawler.scheduler.MemoryScheduler;
 import com.mrkid.crawler.scheduler.Scheduler;
 import io.reactivex.Emitter;
 import io.reactivex.Flowable;
@@ -30,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Spider {
     private Downloader downloader;
 
-    private Scheduler scheduler;
+    private Scheduler scheduler = new MemoryScheduler();
 
     private Site site;
 

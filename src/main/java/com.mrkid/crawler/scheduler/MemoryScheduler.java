@@ -1,19 +1,10 @@
 package com.mrkid.crawler.scheduler;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mrkid.crawler.Request;
 import com.mrkid.crawler.processor.DuplicateRemover;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -50,8 +41,6 @@ public class MemoryScheduler implements Scheduler {
         if (!duplicateRemover.isDuplicate(request)) {
             queue.offer(request);
         }
-
-
     }
 
     @Override

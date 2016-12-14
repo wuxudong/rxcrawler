@@ -25,7 +25,6 @@ public class Page {
     private final ResultItems resultItems;
 
     public void addTargetRequest(Request request) {
-        logger.debug("addTargetRequest {}", request);
         targetRequests.add(request);
     }
 

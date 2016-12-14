@@ -87,7 +87,7 @@ public class HttpAsyncClientDownloader implements Downloader {
             @Override
             public void completed(HttpResponse httpResponse) {
                 final int status = httpResponse.getStatusLine().getStatusCode();
-                logger.info("finish download {} method {} form {} status {}", request.getUrl(),
+                logger.info("finish downloading {} method {} form {} status {}", request.getUrl(),
                         request.getMethod(), request.getForm(), status);
 
 
