@@ -37,7 +37,7 @@ public class ITJuziConfiguration {
         site.setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) " +
                 "Chrome/54.0.2840.71 Safari/537.36");
 
-        site.setTimeOut(30 * 1000);
+        site.setTimeOut(90 * 1000);
 
         // use squid as proxy, you may add parent of proxies in squid
         site.setHttpProxy(new HttpHost("127.0.0.1", 3128));
@@ -88,6 +88,7 @@ public class ITJuziConfiguration {
 
         final CloseableHttpAsyncClient asyncClient = asyncClientBuilder.build();
         asyncClient.start();
+
 
         return asyncClient;
     }
