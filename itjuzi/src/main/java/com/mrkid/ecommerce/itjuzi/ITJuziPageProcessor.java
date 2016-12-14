@@ -33,6 +33,8 @@ public class ITJuziPageProcessor implements SubPageProcessor {
             if (pageCount <= 0) {
                 throw new IllegalArgumentException("unexpected pageCount " + pageCount);
             }
+
+            Globals.pageCount = pageCount;
         }
 
         int currentPage = (Integer) page.getRequest().getExtra("page");
