@@ -10,7 +10,7 @@
 
     <appender name="rollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
+            <level>DEBUG</level>
         </filter>
         <file>app.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -26,7 +26,7 @@
     </appender>
 
 
-    <logger name="comr.mrkid" level="debug" />
+    <logger name="com.mrkid" level="debug"/>
 
 
     <root level="INFO">
