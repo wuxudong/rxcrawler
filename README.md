@@ -29,9 +29,12 @@
 ## webmagic的rx-java改造
 借鉴webmagic的结构和接口，但对核心的spider，downloader 使用 nio，rx-java 进行重写， 可以支持少量线程支持上千的并发抓取，配合squid和[proxy-checker](https://github.com/wuxudong/proxy-checker)获取的代理ip，极大提升抓取效率。
 
-## [京东爬虫](https://github.com/wuxudong/jdcrawler)
+##DEMO
+
+* [京东爬虫](https://github.com/wuxudong/jdcrawler)
+
 基于rxcralwer的例子，抓取京东的移动端接口。
 
+* [IT桔子爬虫](https://github.com/wuxudong/itjuzi_crawler)
 
-## [IT桔子爬虫](https://github.com/wuxudong/itjuzi_crawler)
 基于rxcralwer的例子，抓取_IT桔子_的移动端接口。
