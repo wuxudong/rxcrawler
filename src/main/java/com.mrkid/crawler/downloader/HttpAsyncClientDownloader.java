@@ -132,7 +132,10 @@ public class HttpAsyncClientDownloader implements Downloader {
         });
 
         return toFlowable(promise);
+    }
 
-
+    @Override
+    public void close() throws IOException {
+        client.close();
     }
 }

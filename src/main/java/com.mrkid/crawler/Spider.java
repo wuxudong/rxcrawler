@@ -1,6 +1,7 @@
 package com.mrkid.crawler;
 
 import com.mrkid.crawler.downloader.Downloader;
+import com.mrkid.crawler.downloader.HttpAsyncClientDownloader;
 import com.mrkid.crawler.pipeline.Pipeline;
 import com.mrkid.crawler.processor.PageProcessor;
 import com.mrkid.crawler.scheduler.MemoryScheduler;
@@ -13,14 +14,22 @@ import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import lombok.Data;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
+import org.apache.http.message.BasicHeader;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * User: xudong
@@ -28,25 +37,32 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Time: 4:44 PM
  */
 @Data
-public class Spider {
+public class Spider implements Closeable {
     private Downloader downloader;
 
     private Scheduler scheduler = new MemoryScheduler();
 
     private Site site;
 
-    private PageProcessor pageProcessor;
+    private PageProcessor pageProcessor = page -> page;
 
-    private Pipeline pipeline;
+    private Pipeline pipeline = resultItems -> {
+    };
 
-    private int maxConcurrency = 1;
 
-    private AtomicInteger runningCount = new AtomicInteger(0);
+    private final AtomicInteger runningCount = new AtomicInteger(0);
 
-    private Logger logger = LoggerFactory.getLogger(Spider.class);
+    private final static Logger logger = LoggerFactory.getLogger(Spider.class);
+
+    public Spider() {
+    }
 
     public void start() {
-        Disposable disposable = Flowable.interval(10, 10, TimeUnit.SECONDS)
+        assert site != null;
+
+        initComponent();
+
+        Disposable stats = Flowable.interval(10, 10, TimeUnit.SECONDS)
                 .subscribe(l ->
                         logger.info("crawler concurrency {}, {} requests are waiting scheduled"
                                 , runningCount.get(), scheduler.size()));
@@ -54,7 +70,7 @@ public class Spider {
         Flowable.generate(generator())
                 .subscribeOn(Schedulers.from(Executors.newSingleThreadExecutor()))
                 .doOnNext(r -> runningCount.incrementAndGet())
-                .flatMap(request -> download(request), maxConcurrency)
+                .flatMap(request -> download(request), site.getMaxConnTotal())
                 .flatMap(optional -> {
                     if (optional.isPresent()) {
                         return Flowable.just(optional).subscribeOn(Schedulers.io())
@@ -74,9 +90,56 @@ public class Spider {
                 .doOnNext(optional -> runningCount.decrementAndGet())
                 .blockingSubscribe();
 
-        logger.info("spider finished");
+        stats.dispose();
 
-        disposable.dispose();
+        logger.info("spider finished");
+    }
+
+    private void initComponent() {
+        assert site != null;
+
+        if (downloader == null) {
+            // reactor config
+            IOReactorConfig reactorConfig = IOReactorConfig.custom()
+                    .setConnectTimeout(site.getTimeOut())
+                    .setSoTimeout(site.getTimeOut())
+                    .build();
+
+            RequestConfig requestConfig = RequestConfig.custom()
+                    .setConnectTimeout(site.getTimeOut())
+                    .setSocketTimeout(site.getTimeOut())
+                    .setConnectionRequestTimeout(site.getTimeOut())
+                    .build();
+
+
+            HttpAsyncClientBuilder asyncClientBuilder = HttpAsyncClientBuilder.create()
+                    .setDefaultIOReactorConfig(reactorConfig)
+                    .setDefaultRequestConfig(requestConfig)
+                    .setMaxConnPerRoute(site.getMaxConnPerRoute())
+                    .setMaxConnTotal(site.getMaxConnTotal());
+
+            if (site.getUserAgent() != null) {
+                asyncClientBuilder.setUserAgent(site.getUserAgent());
+            }
+
+            if (site.getHttpProxy() != null) {
+                asyncClientBuilder.setProxy(site.getHttpProxy());
+            }
+
+            if (site.getHeaders() != null) {
+                asyncClientBuilder.setDefaultHeaders(site.getHeaders().entrySet()
+                        .stream()
+                        .map(e -> new BasicHeader(e.getKey(), e.getValue()))
+                        .collect(Collectors.toList()));
+            }
+
+
+            final CloseableHttpAsyncClient asyncClient = asyncClientBuilder.build();
+            asyncClient.start();
+
+            downloader = new HttpAsyncClientDownloader(asyncClient);
+        }
+
     }
 
     private Consumer<Emitter<Request>> generator() {
@@ -130,4 +193,10 @@ public class Spider {
         scheduler.offer(request);
     }
 
+    @Override
+    public void close() throws IOException {
+        if (downloader != null) {
+            downloader.close();
+        }
+    }
 }
