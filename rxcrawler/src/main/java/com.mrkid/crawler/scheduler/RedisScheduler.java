@@ -76,6 +76,11 @@ public class RedisScheduler implements Scheduler {
 
     }
 
+    @Override
+    public long size() {
+        return redisTemplate.boundListOps(getPendingQueueKey()).size();
+    }
+
 
     private void assignRequestUUID(Request request) {
         if (StringUtils.isBlank(getRequestUUID(request))) {

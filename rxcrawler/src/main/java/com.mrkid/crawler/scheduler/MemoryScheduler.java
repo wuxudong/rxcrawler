@@ -35,6 +35,11 @@ public class MemoryScheduler implements Scheduler {
     }
 
     @Override
+    public long size() {
+        return queue.size();
+    }
+
+    @Override
     public void reset() {
         queue.clear();
     }

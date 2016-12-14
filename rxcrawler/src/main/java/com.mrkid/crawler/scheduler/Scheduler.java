@@ -31,4 +31,6 @@ public interface Scheduler {
      */
     void restore();
 
+    long size();
+
 }

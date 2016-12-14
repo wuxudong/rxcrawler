@@ -1,6 +1,8 @@
 package com.mrkid.crawler;
 
 import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,6 +11,8 @@ import java.util.Map;
 
 @Data
 public class Page {
+
+    private static final Logger logger = LoggerFactory.getLogger(Page.class);
 
     private final Request request;
 
@@ -21,6 +25,7 @@ public class Page {
     private final ResultItems resultItems;
 
     public void addTargetRequest(Request request) {
+        logger.debug("addTargetRequest {}", request);
         targetRequests.add(request);
     }
 

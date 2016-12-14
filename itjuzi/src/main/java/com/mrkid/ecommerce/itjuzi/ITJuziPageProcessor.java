@@ -43,6 +43,7 @@ public class ITJuziPageProcessor implements SubPageProcessor {
             final long comId = node.get("com_id").asLong();
             companyCount++;
             if (!CompanyDumper.isCompanyDone(comId)) {
+
                 page.addTargetRequest(RequestHelper.companyRequest(comId));
             }
         }

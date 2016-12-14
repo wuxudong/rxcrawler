@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -44,11 +45,13 @@ public class Spider {
     private Logger logger = LoggerFactory.getLogger(Spider.class);
 
     public void start() {
-        Disposable disposable = Flowable.interval(10, 10, TimeUnit.SECONDS).subscribe(l -> logger.info("crawler " +
-                "concurrency " + runningCount
-                .get()));
+        Disposable disposable = Flowable.interval(10, 10, TimeUnit.SECONDS)
+                .subscribe(l ->
+                        logger.info("crawler concurrency {}, {} requests are waiting scheduled"
+                                , runningCount.get(), scheduler.size()));
 
         Flowable.generate(generator())
+                .subscribeOn(Schedulers.from(Executors.newSingleThreadExecutor()))
                 .doOnNext(r -> runningCount.incrementAndGet())
                 .flatMap(request -> download(request), maxConcurrency)
                 .flatMap(optional -> {
@@ -122,6 +125,7 @@ public class Spider {
 
 
     public void addRequest(Request request) {
+        logger.debug("add Request {} to scheduler", request);
         scheduler.offer(request);
     }
 
