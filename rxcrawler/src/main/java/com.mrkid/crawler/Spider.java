@@ -70,6 +70,8 @@ public class Spider {
                 .doOnNext(optional -> runningCount.decrementAndGet())
                 .blockingSubscribe();
 
+        logger.info("spider finished");
+
         disposable.dispose();
     }
 
