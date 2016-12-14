@@ -6,6 +6,7 @@ import com.mrkid.crawler.processor.PageProcessor;
 import com.mrkid.crawler.scheduler.Scheduler;
 import io.reactivex.Emitter;
 import io.reactivex.Flowable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
@@ -43,6 +44,10 @@ public class Spider {
     private Logger logger = LoggerFactory.getLogger(Spider.class);
 
     public void start() {
+        Disposable disposable = Flowable.interval(10, 10, TimeUnit.SECONDS).subscribe(l -> logger.info("crawler " +
+                "concurrency " + runningCount
+                .get()));
+
         Flowable.generate(generator())
                 .doOnNext(r -> runningCount.incrementAndGet())
                 .flatMap(request -> download(request), maxConcurrency)
@@ -64,6 +69,8 @@ public class Spider {
                 })
                 .doOnNext(optional -> runningCount.decrementAndGet())
                 .blockingSubscribe();
+
+        disposable.dispose();
     }
 
     private Consumer<Emitter<Request>> generator() {
