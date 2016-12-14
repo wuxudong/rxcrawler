@@ -21,7 +21,6 @@ public class ITJuziPageProcessor implements SubPageProcessor {
 
     private Logger logger = LoggerFactory.getLogger(ITJuziPageProcessor.class);
 
-
     @Override
     public MatchOther processPage(Page page) throws Exception {
         JsonNode body = objectMapper.readTree(page.getRawText());
@@ -50,9 +49,16 @@ public class ITJuziPageProcessor implements SubPageProcessor {
 
         logger.info("page " + currentPage + " has " + companyCount + " companies");
 
-
         if (currentPage < Globals.pageCount) {
-            page.addTargetRequest(RequestHelper.pageRequest(currentPage + 1));
+            // if we crawl page one by one, it will restrict concurrency to low level
+            // if we add all page at same time, it will be a big pressure on memory.
+
+            // try 20 pages
+            if (currentPage % 20 == 0) {
+                for (int i=1; i<=20 && currentPage + i <= Globals.pageCount; i++) {
+                    page.addTargetRequest(RequestHelper.pageRequest(currentPage + i));
+                }
+            }
         }
 
         logger.info("page " + currentPage + " done");
