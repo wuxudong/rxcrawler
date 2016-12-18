@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
@@ -37,6 +37,10 @@ public class HttpAsyncClientDownloader implements Downloader {
     private Logger logger = LoggerFactory.getLogger(HttpAsyncClientDownloader.class);
 
     private final CloseableHttpAsyncClient client;
+
+    private final int overallTime;
+
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
     private static <T> Flowable<T> toFlowable(CompletableFuture<T> future) {
         final BehaviorProcessor<T> processor = BehaviorProcessor.create();
@@ -83,7 +87,7 @@ public class HttpAsyncClientDownloader implements Downloader {
         }
 
         logger.info("start downloading {} method {} form {}", request.getUrl(), request.getMethod(), request.getForm());
-        client.execute(httpUriRequest, new FutureCallback<HttpResponse>() {
+        Future<HttpResponse> future = client.execute(httpUriRequest, new FutureCallback<HttpResponse>() {
             @Override
             public void completed(HttpResponse httpResponse) {
                 final int status = httpResponse.getStatusLine().getStatusCode();
@@ -130,6 +134,14 @@ public class HttpAsyncClientDownloader implements Downloader {
                 promise.cancel(false);
             }
         });
+
+        if (overallTime > 0) {
+            scheduledExecutorService.schedule(() -> {
+                if (!future.isDone()) {
+                    future.cancel(true);
+                }
+            }, overallTime, TimeUnit.MILLISECONDS);
+        }
 
         return toFlowable(promise);
     }

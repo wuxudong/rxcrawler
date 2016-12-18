@@ -99,21 +99,13 @@ public class Spider implements Closeable {
         assert site != null;
 
         if (downloader == null) {
-            // reactor config
-            IOReactorConfig reactorConfig = IOReactorConfig.custom()
-                    .setConnectTimeout(site.getTimeOut())
-                    .setSoTimeout(site.getTimeOut())
-                    .build();
-
             RequestConfig requestConfig = RequestConfig.custom()
-                    .setConnectTimeout(site.getTimeOut())
-                    .setSocketTimeout(site.getTimeOut())
-                    .setConnectionRequestTimeout(site.getTimeOut())
+                    .setConnectTimeout(site.getConnectionTimeOut())
+                    .setSocketTimeout(site.getSocketTimeOut())
                     .build();
 
 
             HttpAsyncClientBuilder asyncClientBuilder = HttpAsyncClientBuilder.create()
-                    .setDefaultIOReactorConfig(reactorConfig)
                     .setDefaultRequestConfig(requestConfig)
                     .setMaxConnPerRoute(site.getMaxConnPerRoute())
                     .setMaxConnTotal(site.getMaxConnTotal());
@@ -137,7 +129,7 @@ public class Spider implements Closeable {
             final CloseableHttpAsyncClient asyncClient = asyncClientBuilder.build();
             asyncClient.start();
 
-            downloader = new HttpAsyncClientDownloader(asyncClient);
+            downloader = new HttpAsyncClientDownloader(asyncClient, site.getOverallTimeout());
         }
 
     }
